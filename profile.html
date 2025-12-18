@@ -558,7 +558,7 @@
         <!-- Left: Profile Card -->
         <div class="profile-card fade-in delay-1">
           <div class="avatar-container" id="avatarContainer" title="Click to change profile photo">
-            <img id="avatarImage" class="avatar" src="" alt="Profile Avatar" style="display: none;" onerror="handleAvatarError()">
+            <img id="avatarImage" class="avatar" src="" alt="Profile Avatar" style="display: none;">
             <div id="avatarFallback" class="avatar-fallback">👤</div>
             <label class="avatar-upload" title="Change profile photo">
               📷
@@ -711,6 +711,11 @@
         if (!$(e.target).closest('.avatar-upload').length) {
           $('#avatarInput').click();
         }
+      });
+      
+      // Handle avatar image error (attach via JS to avoid undefined function error)
+      $('#avatarImage').on('error', function() {
+        showAvatarFallback();
       });
 
       if (!authToken) {
