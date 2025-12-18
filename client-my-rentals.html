@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Rentals - Client - CameraRental</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  <link rel="stylesheet" href="light-theme.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">
+        <span class="logo-mark" aria-hidden="true">📷</span>
+        <span class="logo-text">CameraRental</span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li class="nav-item nav-renter"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li class="nav-item nav-renter"><a href="client-rent-camera.html" class="nav-link">Rent Camera</a></li>
+        <li class="nav-item nav-renter"><a href="client-my-rentals.html" class="nav-link active">My Rentals</a></li>
+        <li class="nav-item"><a href="profile.html" class="nav-link">Profile</a></li>
+        <li class="nav-item"><a href="#" id="logoutBtn" class="nav-link nav-logout">Logout</a></li>
+      </ul>
+      <div class="hamburger" id="hamburger" aria-label="Menu" role="button" tabindex="0">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-inner container">
+      <div class="hero-left">
+        <p class="badge">My Rentals</p>
+        <h1 class="page-title">My Rentals</h1>
+        <p class="hero-subtitle">
+          Track your camera rentals, view status, and manage your bookings.
+        </p>
+      </div>
+      <div class="hero-right" aria-hidden="true">
+        <div class="camera-card">
+          <div class="camera-top"></div>
+          <div class="camera-body">
+            <div class="camera-lens">
+              <div class="lens-ring"></div>
+              <div class="lens-glow"></div>
+            </div>
+            <div class="camera-flash"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="table-container">
+        <table id="rentalsTable">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Camera</th>
+              <th>Employee</th>
+              <th>Rental Date</th>
+              <th>Return Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" style="text-align: center;">Loading rentals...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/rentals.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    requireAuth();
+    
+    // Role-based navigation visibility
+    function showRole(roleName) {
+      const body = document.body;
+      body.classList.remove('role-admin', 'role-employee', 'role-renter');
+      body.classList.add('role-' + roleName);
+
+      document.querySelectorAll('.role-admin, .role-employee, .role-renter, .nav-admin, .nav-employee, .nav-renter')
+        .forEach(el => {
+          el.style.display = 'none';
+        });
+
+      document.querySelectorAll('.role-' + roleName + ', .nav-' + roleName)
+        .forEach(el => {
+          el.style.display = '';
+        });
+    }
+    
+    // Check and refresh role
+    async function checkRole() {
+      let role = localStorage.getItem('userRole');
+      
+      // Refresh role from server
+      if (typeof refreshUserRole === 'function') {
+        const refreshedRole = await refreshUserRole();
+        if (refreshedRole) {
+          role = refreshedRole;
+        }
+      }
+      
+      if (role !== 'renter') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Access Denied',
+          text: 'Renter role required.',
+          confirmButtonText: 'Go to Login'
+        }).then(() => {
+          window.location.href = 'login.html';
+        });
+        return false;
+      }
+      
+      // Apply role-based UI
+      showRole('renter');
+      return true;
+    }
+    
+    // Check role and proceed
+    checkRole().then(hasAccess => {
+      if (!hasAccess) return;
+      // Continue with page initialization
+      loadMyRentalsList();
+    });
+
+    async function loadMyRentalsList() {
+      try {
+        const rentals = await loadMyRentals();
+        const tbody = document.querySelector('#rentalsTable tbody');
+        
+        if (rentals.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">You have no rentals yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        rentals.forEach(rental => {
+          const tr = document.createElement('tr');
+          const imageUrl = rental.camera_image ? `https://prolens.ccs4thyear.com/${rental.camera_image}` : 'https://prolens.ccs4thyear.com/uploads/default.png';
+          const actionButtons = rental.status === 'pending'
+            ? `<button class="btn btn-danger" onclick="handleCancelRental(${rental.id})">Cancel</button>`
+            : '-';
+          
+          tr.innerHTML = `
+            <td><img src="${imageUrl}" alt="${rental.camera_info}" class="camera-image" onerror="this.src='https://prolens.ccs4thyear.com/uploads/default.png'"></td>
+            <td>${rental.camera_info}</td>
+            <td>${rental.employee}</td>
+            <td>${new Date(rental.rental_date).toLocaleDateString()}</td>
+            <td>${new Date(rental.return_date).toLocaleDateString()}</td>
+            <td><span class="status-badge status-${rental.status}">${rental.status}</span></td>
+            <td>${actionButtons}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Error loading rentals:', err);
+        const tbody = document.querySelector('#rentalsTable tbody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading rentals. Please try again.</td></tr>';
+      }
+    }
+
+    async function handleCancelRental(id) {
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: 'Cancel Rental?',
+        text: 'Are you sure you want to cancel this rental?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, cancel it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ef4444'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        await cancelRental(id);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Cancelled!',
+          text: 'Rental cancelled successfully!',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadMyRentalsList();
+      } catch (err) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.response?.data?.message || err.message || 'Error cancelling rental'
+        });
+      }
+    }
+
+    window.handleCancelRental = handleCancelRental;
+
+    // loadMyRentalsList() is now called in checkRole() callback
+
+    const hamburger = document.getElementById('hamburger');
+    const navMenu = document.getElementById('nav-menu');
+    if (hamburger && navMenu) {
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
+      });
+    }
+  </script>
+</body>
+</html>
+

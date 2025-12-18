@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CameraRental - Professional Camera Renting System</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  <style>
+    /* ============================
+       CameraRental Landing Theme
+       (Matching Dashboard Style)
+       ============================ */
+
+    :root {
+      --bg: #f6f8fc;
+      --bg-2: #eef3fb;
+      --panel: rgba(255,255,255,.85);
+      --panel-2: rgba(255,255,255,.94);
+      --border: rgba(15, 23, 42, .10);
+
+      --text: rgba(15, 23, 42, .92);
+      --muted: rgba(15, 23, 42, .62);
+
+      --accent: #2563eb;
+      --accent-2: #06b6d4;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+
+      --radius: 18px;
+      --shadow: 0 18px 60px rgba(15, 23, 42, .10);
+      --shadow-soft: 0 10px 30px rgba(15, 23, 42, .08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1000px 650px at 90% 0%, rgba(6,182,212,.10), transparent 55%),
+        radial-gradient(900px 700px at 50% 110%, rgba(22,163,74,.08), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--bg-2));
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ============================
+       Topbar / Nav
+       ============================ */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(255,255,255,.70);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 760;
+      letter-spacing: .2px;
+    }
+
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(6,182,212,.10));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .nav-menu {
+      display: flex;
+      list-style: none;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+      border: 1px solid transparent;
+      user-select: none;
+      font-weight: 500;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: rgba(37,99,235,.08);
+      border-color: rgba(37,99,235,.16);
+      transform: translateY(-1px);
+    }
+
+    .nav-link.active {
+      color: rgba(15,23,42,.94);
+      background: rgba(37,99,235,.10);
+      border-color: rgba(37,99,235,.18);
+    }
+
+    .nav-link.cta {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: transparent;
+    }
+
+    .nav-link.cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37,99,235,.25);
+    }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      width: 44px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.85);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: rgba(15, 23, 42, .78);
+      border-radius: 6px;
+      transition: all .25s ease;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    @media (max-width: 768px) {
+      .hamburger { display: inline-flex; }
+      .nav-menu {
+        position: absolute;
+        top: 64px;
+        right: 0;
+        left: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.95);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        display: none;
+      }
+      .nav-menu.active { display: flex; }
+      .nav-link { width: 100%; justify-content: center; }
+    }
+
+    /* ============================
+       Hero Section
+       ============================ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 100px 20px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(900px 500px at 20% 20%, rgba(37,99,235,.08), transparent 50%),
+        radial-gradient(700px 400px at 80% 60%, rgba(6,182,212,.08), transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero-container {
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 40px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-content {
+      max-width: 560px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.85);
+      color: var(--muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hero-badge span {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 600;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 4.5vw, 3.5rem);
+      font-weight: 760;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.125rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 32px;
+      max-width: 480px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all .2s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 8px 24px rgba(37,99,235,.25);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(37,99,235,.30);
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: rgba(255,255,255,.85);
+      border-color: var(--border);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,1);
+      border-color: rgba(37,99,235,.25);
+      transform: translateY(-2px);
+    }
+
+    /* Camera Illustration */
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .camera-showcase {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .camera-card {
+      width: 100%;
+      padding: 20px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,255,255,.75));
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .camera-top {
+      height: 28px;
+      width: 55%;
+      margin: 0 auto 14px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(15,23,42,.12), rgba(15,23,42,.05));
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .camera-top::before {
+      content: "";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 8px var(--ok);
+    }
+
+    .camera-body {
+      height: 200px;
+      border-radius: 22px;
+      position: relative;
+      background:
+        radial-gradient(220px 150px at 25% 10%, rgba(15,23,42,.10), transparent 55%),
+        linear-gradient(180deg, rgba(15,23,42,.10), rgba(15,23,42,.04));
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .camera-flash {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      width: 60px;
+      height: 26px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.80);
+      border: 1px solid var(--border);
+    }
+
+    .camera-lens {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 120px;
+      height: 120px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.20);
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,.60), rgba(255,255,255,.10) 55%),
+        radial-gradient(circle at 60% 70%, rgba(15,23,42,.25), rgba(15,23,42,.60) 70%);
+      box-shadow: 
+        inset 0 0 0 12px rgba(255,255,255,.30),
+        0 8px 30px rgba(15,23,42,.20);
+    }
+
+    .lens-ring {
+      position: absolute;
+      inset: 14px;
+      border-radius: 999px;
+      border: 1px dashed rgba(15,23,42,.20);
+    }
+
+    .lens-inner {
+      position: absolute;
+      inset: 30px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 40% 35%, rgba(37,99,235,.15), rgba(6,182,212,.25) 60%);
+    }
+
+    .lens-glow {
+      position: absolute;
+      inset: -30px;
+      border-radius: 999px;
+      background: radial-gradient(circle,
+        transparent 30%,
+        rgba(37,99,235,.12) 60%,
+        rgba(6,182,212,.10) 80%);
+      filter: blur(15px);
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* Floating elements */
+    .floating-card {
+      position: absolute;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .floating-card .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+    }
+
+    .floating-card.card-1 {
+      top: 10px;
+      left: -30px;
+      animation-delay: 0s;
+    }
+
+    .floating-card.card-1 .icon {
+      background: rgba(37,99,235,.12);
+    }
+
+    .floating-card.card-2 {
+      bottom: 20px;
+      right: -20px;
+      animation-delay: 1s;
+    }
+
+    .floating-card.card-2 .icon {
+      background: rgba(22,163,74,.12);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @media (max-width: 900px) {
+      .hero-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .hero-content { max-width: 100%; }
+      .hero-subtitle { margin-left: auto; margin-right: auto; }
+      .hero-buttons { justify-content: center; }
+      .camera-showcase { margin-top: 40px; max-width: 320px; }
+      .floating-card { display: none; }
+    }
+
+    /* ============================
+       Features Section
+       ============================ */
+    .features {
+      padding: 80px 20px;
+      position: relative;
+    }
+
+    .features::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+
+    .container {
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(37,99,235,.08);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 3.5vw, 2.75rem);
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 550px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+    }
+
+    .feature-card {
+      padding: 28px 24px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.75));
+      box-shadow: var(--shadow-soft);
+      transition: all .25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      opacity: 0;
+      transition: opacity .25s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(37,99,235,.20);
+      box-shadow: var(--shadow);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(6,182,212,.08));
+      border: 1px solid rgba(37,99,235,.12);
+    }
+
+    .feature-card h3 {
+      font-size: 1.2rem;
+      font-weight: 650;
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* ============================
+       Stats Section
+       ============================ */
+    .stats-section {
+      padding: 60px 20px;
+      background:
+        radial-gradient(800px 400px at 50% 50%, rgba(37,99,235,.06), transparent 60%);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 500px) {
+      .stats-grid { grid-template-columns: 1fr; max-width: 280px; margin: 0 auto; }
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 28px 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.80);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 750;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    /* ============================
+       CTA Section
+       ============================ */
+    .cta-section {
+      padding: 80px 20px;
+    }
+
+    .cta-card {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 40px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(37,99,235,.30);
+    }
+
+    .cta-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    .cta-card h2 {
+      color: white;
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 700;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .cta-card p {
+      color: rgba(255,255,255,.90);
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto 28px;
+      position: relative;
+    }
+
+    .cta-card .btn {
+      background: white;
+      color: var(--accent);
+      border-color: white;
+      position: relative;
+    }
+
+    .cta-card .btn:hover {
+      background: transparent;
+      color: white;
+      border-color: white;
+    }
+
+    /* ============================
+       Footer
+       ============================ */
+    footer {
+      padding: 60px 20px 30px;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,.50);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.5fr repeat(3, 1fr);
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 768px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 30px;
+      }
+    }
+
+    .footer-brand .logo {
+      margin-bottom: 14px;
+      display: inline-flex;
+    }
+
+    .footer-brand p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      max-width: 280px;
+    }
+
+    @media (max-width: 768px) {
+      .footer-brand p { margin: 0 auto; }
+    }
+
+    .footer-column h4 {
+      font-size: 0.95rem;
+      font-weight: 650;
+      margin-bottom: 18px;
+      color: var(--text);
+    }
+
+    .footer-column ul {
+      list-style: none;
+    }
+
+    .footer-column ul li {
+      margin-bottom: 12px;
+    }
+
+    .footer-column ul li a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color .15s ease;
+    }
+
+    .footer-column ul li a:hover {
+      color: var(--accent);
+    }
+
+    .footer-bottom {
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    /* Focus States */
+    a:focus-visible, .btn:focus-visible, .hamburger:focus-visible {
+      outline: 3px solid rgba(37,99,235,.45);
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    /* Animations */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .delay-1 { transition-delay: 0.1s; }
+    .delay-2 { transition-delay: 0.2s; }
+    .delay-3 { transition-delay: 0.3s; }
+    .delay-4 { transition-delay: 0.4s; }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="topbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-mark" aria-hidden="true">📷</span>
+        <span class="logo-text">CameraRental</span>
+      </a>
+
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="index.html" class="nav-link active">Home</a></li>
+        <li><a href="login.html" class="nav-link">Login</a></li>
+        <li><a href="register.html" class="nav-link cta">Get Started</a></li>
+      </ul>
+
+      <div class="hamburger" id="hamburger" aria-label="Menu" role="button" tabindex="0">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="hero-badge fade-in">
+          📷 <span>Professional Equipment</span>
+        </div>
+        <h1 class="fade-in delay-1">
+          Rent Premium <span class="highlight">Cameras</span> for Every Shoot
+        </h1>
+        <p class="hero-subtitle fade-in delay-2">
+          Access professional camera equipment without the heavy investment. 
+          From DSLRs to cinema cameras, find the perfect gear for your next project.
+        </p>
+        <div class="hero-buttons fade-in delay-3">
+          <a href="register.html" class="btn btn-primary">Start Renting →</a>
+          <a href="login.html" class="btn btn-secondary">Sign In</a>
+        </div>
+      </div>
+
+      <div class="hero-visual fade-in delay-2">
+        <div class="camera-showcase">
+          <div class="floating-card card-1">
+            <div class="icon">📦</div>
+            <span>Easy Pickup</span>
+          </div>
+          <div class="floating-card card-2">
+            <div class="icon">✓</div>
+            <span>Verified Gear</span>
+          </div>
+          
+          <div class="camera-card">
+            <div class="camera-top"></div>
+            <div class="camera-body">
+              <div class="camera-lens">
+                <div class="lens-ring"></div>
+                <div class="lens-inner"></div>
+                <div class="lens-glow"></div>
+              </div>
+              <div class="camera-flash"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-badge fade-in">✨ Features</div>
+        <h2 class="section-title fade-in delay-1">Why Choose CameraRental</h2>
+        <p class="section-subtitle fade-in delay-2">
+          Everything you need to rent professional camera equipment with confidence
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card fade-in delay-1">
+          <div class="feature-icon">📷</div>
+          <h3>Premium Equipment</h3>
+          <p>Access a wide range of professional cameras, lenses, and accessories from top brands.</p>
+        </div>
+
+        <div class="feature-card fade-in delay-2">
+          <div class="feature-icon">🔒</div>
+          <h3>Secure & Insured</h3>
+          <p>All rentals are fully insured with enterprise-grade security for your peace of mind.</p>
+        </div>
+
+        <div class="feature-card fade-in delay-3">
+          <div class="feature-icon">⚡</div>
+          <h3>Quick Process</h3>
+          <p>Simple booking system with fast approval. Get your gear ready when you need it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card fade-in delay-1">
+          <div class="stat-number">500+</div>
+          <div class="stat-label">Cameras Available</div>
+        </div>
+        <div class="stat-card fade-in delay-2">
+          <div class="stat-number">2K+</div>
+          <div class="stat-label">Happy Renters</div>
+        </div>
+        <div class="stat-card fade-in delay-3">
+          <div class="stat-number">99%</div>
+          <div class="stat-label">Satisfaction Rate</div>
+        </div>
+        <div class="stat-card fade-in delay-4">
+          <div class="stat-number">24/7</div>
+          <div class="stat-label">Support Available</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card fade-in">
+        <h2>Ready to Capture Your Vision?</h2>
+        <p>Join our community of photographers and filmmakers. Start renting professional gear today.</p>
+        <a href="register.html" class="btn">Create Free Account</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="logo">
+            <span class="logo-mark" aria-hidden="true">📷</span>
+            <span class="logo-text">CameraRental</span>
+          </a>
+          <p>Professional camera rental made simple. Access premium equipment for your creative projects.</p>
+        </div>
+
+        <div class="footer-column">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#">Features</a></li>
+            <li><a href="#">Pricing</a></li>
+            <li><a href="#">Equipment</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-column">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">Careers</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-column">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Rental Agreement</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 CameraRental. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script>
+    $(function() {
+      // Hamburger menu
+      $('#hamburger').on('click', function() {
+        $(this).toggleClass('active');
+        $('#nav-menu').toggleClass('active');
+      });
+
+      // Keyboard accessibility for hamburger
+      $('#hamburger').on('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          $(this).click();
+        }
+      });
+
+      // Close menu on link click
+      $('.nav-link').on('click', function() {
+        $('#hamburger').removeClass('active');
+        $('#nav-menu').removeClass('active');
+      });
+
+      // Fade in animation on scroll
+      function checkFadeIn() {
+        $('.fade-in').each(function() {
+          const elementTop = $(this)[0].getBoundingClientRect().top;
+          const windowHeight = $(window).height();
+          
+          if (elementTop < windowHeight - 100) {
+            $(this).addClass('visible');
+          }
+        });
+      }
+
+      // Initial check and scroll listener
+      checkFadeIn();
+      $(window).on('scroll', checkFadeIn);
+    });
+  </script>
+</body>
+</html>

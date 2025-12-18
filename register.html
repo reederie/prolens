@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - CameraRental</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  <style>
+    /* ============================
+       CameraRental Register Theme
+       (Matching Dashboard Style)
+       ============================ */
+
+    :root {
+      --bg: #f6f8fc;
+      --bg-2: #eef3fb;
+      --panel: rgba(255,255,255,.85);
+      --panel-2: rgba(255,255,255,.94);
+      --border: rgba(15, 23, 42, .10);
+
+      --text: rgba(15, 23, 42, .92);
+      --muted: rgba(15, 23, 42, .62);
+
+      --accent: #2563eb;
+      --accent-2: #06b6d4;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --error: #ef4444;
+
+      --radius: 18px;
+      --shadow: 0 18px 60px rgba(15, 23, 42, .10);
+      --shadow-soft: 0 10px 30px rgba(15, 23, 42, .08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1000px 650px at 90% 0%, rgba(6,182,212,.10), transparent 55%),
+        radial-gradient(900px 700px at 50% 110%, rgba(22,163,74,.08), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--bg-2));
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ============================
+       Topbar / Nav
+       ============================ */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(255,255,255,.70);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 760;
+      letter-spacing: .2px;
+    }
+
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(6,182,212,.10));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .nav-menu {
+      display: flex;
+      list-style: none;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+      border: 1px solid transparent;
+      user-select: none;
+      font-weight: 500;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: rgba(37,99,235,.08);
+      border-color: rgba(37,99,235,.16);
+      transform: translateY(-1px);
+    }
+
+    .nav-link.active {
+      color: rgba(15,23,42,.94);
+      background: rgba(37,99,235,.10);
+      border-color: rgba(37,99,235,.18);
+    }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      width: 44px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.85);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: rgba(15, 23, 42, .78);
+      border-radius: 6px;
+      transition: all .25s ease;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    @media (max-width: 768px) {
+      .hamburger { display: inline-flex; }
+      .nav-menu {
+        position: absolute;
+        top: 64px;
+        right: 0;
+        left: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.95);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        display: none;
+      }
+      .nav-menu.active { display: flex; }
+      .nav-link { width: 100%; justify-content: center; }
+    }
+
+    /* ============================
+       Main Content
+       ============================ */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 20px 40px;
+    }
+
+    .register-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 40px;
+      width: min(1050px, calc(100% - 40px));
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .register-wrapper {
+        grid-template-columns: 1fr;
+        max-width: 480px;
+      }
+      .register-visual { display: none; }
+    }
+
+    /* Left side - Visual */
+    .register-visual {
+      text-align: center;
+    }
+
+    .visual-content h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .visual-content p {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 30px;
+    }
+
+    /* Features list */
+    .features-list {
+      text-align: left;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.80);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      transition: all .2s ease;
+    }
+
+    .feature-item:hover {
+      transform: translateX(4px);
+      border-color: rgba(37,99,235,.20);
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(6,182,212,.08));
+      border: 1px solid rgba(37,99,235,.12);
+      flex-shrink: 0;
+    }
+
+    .feature-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* Right side - Form */
+    .form-container {
+      padding: 36px 32px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.80));
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .form-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(6,182,212,.08));
+      border: 1px solid rgba(37,99,235,.14);
+    }
+
+    .form-header h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .form-header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 500px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper .icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      opacity: 0.5;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px 13px 42px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.80);
+      font-size: 0.95rem;
+      color: var(--text);
+      transition: all .2s ease;
+    }
+
+    input::placeholder {
+      color: var(--muted);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+    }
+
+    input.error {
+      border-color: var(--error);
+      box-shadow: 0 0 0 4px rgba(239,68,68,.10);
+    }
+
+    .error-message {
+      color: var(--error);
+      font-size: 0.8rem;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all .2s ease;
+      border: none;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 8px 24px rgba(37,99,235,.25);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(37,99,235,.30);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .form-footer {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .login-link {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .login-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* Terms notice */
+    .terms-notice {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+
+    .terms-notice a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .terms-notice a:hover {
+      text-decoration: underline;
+    }
+
+    /* ============================
+       Footer
+       ============================ */
+    footer {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,.50);
+    }
+
+    /* Focus States */
+    a:focus-visible, .btn:focus-visible, .hamburger:focus-visible {
+      outline: 3px solid rgba(37,99,235,.45);
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    /* Animations */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="topbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-mark" aria-hidden="true">📷</span>
+        <span class="logo-text">CameraRental</span>
+      </a>
+
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="login.html" class="nav-link">Login</a></li>
+        <li><a href="register.html" class="nav-link active">Register</a></li>
+      </ul>
+
+      <div class="hamburger" id="hamburger" aria-label="Menu" role="button" tabindex="0">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main>
+    <div class="register-wrapper">
+      <!-- Left Visual -->
+      <div class="register-visual fade-in">
+        <div class="visual-content">
+          <h2>Join CameraRental</h2>
+          <p>Create an account to start renting professional camera equipment for your projects.</p>
+        </div>
+
+        <div class="features-list">
+          <div class="feature-item fade-in delay-1">
+            <div class="feature-icon">📷</div>
+            <span class="feature-text">Access premium cameras</span>
+          </div>
+          <div class="feature-item fade-in delay-2">
+            <div class="feature-icon">⚡</div>
+            <span class="feature-text">Quick booking process</span>
+          </div>
+          <div class="feature-item fade-in delay-3">
+            <div class="feature-icon">🔒</div>
+            <span class="feature-text">Secure transactions</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Register Form -->
+      <div class="form-container fade-in delay-1">
+        <div class="form-header">
+          <div class="form-icon">✨</div>
+          <h2>Create Account</h2>
+          <p>Fill in your details to get started</p>
+        </div>
+
+        <form id="registerForm">
+          <div class="form-row">
+            <div class="input-group">
+              <label for="firstname">First Name</label>
+              <div class="input-wrapper">
+                <span class="icon">👤</span>
+                <input type="text" id="firstname" name="firstname" placeholder="John" required>
+              </div>
+              <div class="error-message" id="firstname-error"></div>
+            </div>
+
+            <div class="input-group">
+              <label for="lastname">Last Name</label>
+              <div class="input-wrapper">
+                <span class="icon">👤</span>
+                <input type="text" id="lastname" name="lastname" placeholder="Doe" required>
+              </div>
+              <div class="error-message" id="lastname-error"></div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="username">Username</label>
+            <div class="input-wrapper">
+              <span class="icon">@</span>
+              <input type="text" id="username" name="username" placeholder="johndoe" required>
+            </div>
+            <div class="error-message" id="username-error"></div>
+          </div>
+
+          <div class="input-group">
+            <label for="email">Email Address</label>
+            <div class="input-wrapper">
+              <span class="icon">✉️</span>
+              <input type="email" id="email" name="email" placeholder="john@example.com" required>
+            </div>
+            <div class="error-message" id="email-error"></div>
+          </div>
+
+          <div class="input-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <span class="icon">🔒</span>
+              <input type="password" id="password" name="password" placeholder="Create a strong password" required>
+            </div>
+            <div class="error-message" id="password-error"></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Create Account →</button>
+
+          <p class="terms-notice">
+            By creating an account, you agree to our<br>
+            <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+          </p>
+        </form>
+
+        <div class="form-footer">
+          <p class="login-link">Already have an account? <a href="login.html">Sign in</a></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 CameraRental. All rights reserved.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+  
+  <script>
+    $(function() {
+      // Hamburger menu
+      $('#hamburger').on('click', function() {
+        $(this).toggleClass('active');
+        $('#nav-menu').toggleClass('active');
+      });
+
+      // Keyboard accessibility
+      $('#hamburger').on('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          $(this).click();
+        }
+      });
+
+      // Close menu on link click
+      $('.nav-link').on('click', function() {
+        $('#hamburger').removeClass('active');
+        $('#nav-menu').removeClass('active');
+      });
+
+      // Redirect if already logged in
+      redirectIfLoggedIn();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Rentals - Employee - CameraRental</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  <link rel="stylesheet" href="light-theme.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">
+        <span class="logo-mark" aria-hidden="true">📷</span>
+        <span class="logo-text">CameraRental</span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li class="nav-item nav-employee"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li class="nav-item nav-employee"><a href="employee-rentals.html" class="nav-link active">Rentals</a></li>
+        <li class="nav-item"><a href="profile.html" class="nav-link">Profile</a></li>
+        <li class="nav-item"><a href="#" id="logoutBtn" class="nav-link nav-logout">Logout</a></li>
+      </ul>
+      <div class="hamburger" id="hamburger" aria-label="Menu" role="button" tabindex="0">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-inner container">
+      <div class="hero-left">
+        <p class="badge">My Assignments</p>
+        <h1 class="page-title">My Assigned Rentals</h1>
+        <p class="hero-subtitle">
+          Manage rental requests assigned to you and process transactions.
+        </p>
+      </div>
+      <div class="hero-right" aria-hidden="true">
+        <div class="camera-card">
+          <div class="camera-top"></div>
+          <div class="camera-body">
+            <div class="camera-lens">
+              <div class="lens-ring"></div>
+              <div class="lens-glow"></div>
+            </div>
+            <div class="camera-flash"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      
+      <div class="table-container">
+        <table id="rentalsTable">
+          <thead>
+            <tr>
+              <th>Rental ID</th>
+              <th>Renter Name</th>
+              <th>Camera</th>
+              <th>Rental Date</th>
+              <th>Return Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" style="text-align: center;">Loading rentals...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/rentals.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    requireAuth();
+    
+    // Role-based navigation visibility
+    function showRole(roleName) {
+      const body = document.body;
+      body.classList.remove('role-admin', 'role-employee', 'role-renter');
+      body.classList.add('role-' + roleName);
+
+      document.querySelectorAll('.role-admin, .role-employee, .role-renter, .nav-admin, .nav-employee, .nav-renter')
+        .forEach(el => {
+          el.style.display = 'none';
+        });
+
+      document.querySelectorAll('.role-' + roleName + ', .nav-' + roleName)
+        .forEach(el => {
+          el.style.display = '';
+        });
+    }
+    
+    // Check and refresh role
+    async function checkRole() {
+      let role = localStorage.getItem('userRole');
+      
+      // Refresh role from server
+      if (typeof refreshUserRole === 'function') {
+        const refreshedRole = await refreshUserRole();
+        if (refreshedRole) {
+          role = refreshedRole;
+        }
+      }
+      
+      if (role !== 'employee') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Access Denied',
+          text: 'Employee role required.',
+          confirmButtonText: 'Go to Login'
+        }).then(() => {
+          window.location.href = 'login.html';
+        });
+        return false;
+      }
+      
+      // Apply role-based UI
+      showRole('employee');
+      return true;
+    }
+    
+    // Check role and proceed
+    checkRole().then(hasAccess => {
+      if (!hasAccess) return;
+      // Continue with page initialization
+      loadRentals();
+    });
+
+    async function loadRentals() {
+      try {
+        const rentals = await loadEmployeeRentals();
+        const tbody = document.querySelector('#rentalsTable tbody');
+        
+        if (rentals.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No rentals available.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        rentals.forEach(rental => {
+          const tr = document.createElement('tr');
+          
+          let actionButtons = '-';
+          const isAssigned = rental.employee_id !== null;
+          
+          // Pending rentals: Show Accept/Reject buttons (for all employees)
+          if (rental.status === 'pending') {
+            actionButtons = `
+              <button class="btn btn-success" onclick="handleApprove(${rental.id})" style="margin-right: 0.5rem;">Accept</button>
+              <button class="btn btn-danger" onclick="handleDecline(${rental.id})">Reject</button>
+            `;
+          }
+          // Approved rentals: Show Give Camera button (only if assigned to this employee)
+          else if (rental.status === 'approved' && isAssigned) {
+            actionButtons = `<button class="btn btn-primary" onclick="handleCameraAction(${rental.id})">Give Camera to Renter</button>`;
+          }
+          // Active rentals: Show Return button (only if assigned to this employee)
+          else if (rental.status === 'active' && isAssigned) {
+            actionButtons = `<button class="btn btn-warning" onclick="handleReturn(${rental.id})">Return</button>`;
+          }
+          // Returned rentals: Show Complete button (only if assigned to this employee)
+          else if (rental.status === 'returned' && isAssigned) {
+            actionButtons = `<button class="btn btn-info" onclick="handleComplete(${rental.id})">Complete</button>`;
+          }
+          // Completed rentals: No action buttons (transaction is fully completed)
+          else if (rental.status === 'completed' && isAssigned) {
+            actionButtons = '<span style="color: var(--text-secondary);">Transaction Completed</span>';
+          }
+          
+          tr.innerHTML = `
+            <td>${rental.id}</td>
+            <td>${rental.renter_name}</td>
+            <td>${rental.camera_info}</td>
+            <td>${new Date(rental.rental_date).toLocaleDateString()}</td>
+            <td>${new Date(rental.return_date).toLocaleDateString()}</td>
+            <td><span class="status-badge status-${rental.status}">${rental.status}</span></td>
+            <td>${actionButtons}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Error loading rentals:', err);
+        const tbody = document.querySelector('#rentalsTable tbody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading rentals. Please try again.</td></tr>';
+      }
+    }
+
+    async function handleApprove(id) {
+      const result = await Swal.fire({
+        icon: 'question',
+        title: 'Accept Rental Request?',
+        text: 'Are you sure you want to accept this rental request? This will assign it to you.',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, accept it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#16a34a'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        await approveRental(id);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Accepted!',
+          text: 'Rental request accepted successfully!',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadRentals();
+      } catch (err) {
+        showErrorAlert(err, 'approving rental');
+      }
+    }
+
+    async function handleDecline(id) {
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: 'Reject Rental Request?',
+        text: 'Are you sure you want to reject this rental request?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, reject it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ef4444'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        await declineRental(id);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Rejected!',
+          text: 'Rental request rejected successfully!',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadRentals();
+      } catch (err) {
+        showErrorAlert(err, 'rejecting rental');
+      }
+    }
+
+    async function handleCameraAction(id) {
+      const result = await Swal.fire({
+        icon: 'question',
+        title: 'Give Camera to Renter?',
+        text: 'Are you sure you want to give this camera to the renter? This will mark the rental as active.',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, give it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#2563eb'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        await handleCamera(id);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Camera Given!',
+          text: 'Camera given to renter successfully! Rental is now active.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadRentals();
+      } catch (err) {
+        showErrorAlert(err, 'giving camera to renter');
+      }
+    }
+
+    async function handleReturn(id) {
+      const result = await Swal.fire({
+        icon: 'question',
+        title: 'Return Camera?',
+        text: 'Are you sure the renter has returned this camera?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, mark as returned',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#f59e0b'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        await returnCamera(id);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Returned!',
+          text: 'Camera returned successfully!',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadRentals();
+      } catch (err) {
+        showErrorAlert(err, 'returning camera');
+      }
+    }
+
+    async function handleComplete(id) {
+      const result = await Swal.fire({
+        icon: 'question',
+        title: 'Complete Rental?',
+        text: 'Are you sure you want to complete this rental?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, complete it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#16a34a'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        await completeRental(id);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Completed!',
+          text: 'Rental completed successfully!',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadRentals();
+      } catch (err) {
+        showErrorAlert(err, 'completing rental');
+      }
+    }
+
+    // Make functions global for inline onclick handlers
+    window.handleApprove = handleApprove;
+    window.handleDecline = handleDecline;
+    window.handleCameraAction = handleCameraAction;
+    window.handleReturn = handleReturn;
+    window.handleComplete = handleComplete;
+
+    // loadRentals() is now called in checkRole() callback
+
+    const hamburger = document.getElementById('hamburger');
+    const navMenu = document.getElementById('nav-menu');
+    if (hamburger && navMenu) {
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
+      });
+    }
+  </script>
+</body>
+</html>
+

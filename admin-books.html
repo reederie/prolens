@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Books Management - Admin - CameraRental</title>
+  <link rel="stylesheet" href="dashboard-styles.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">CameraRental</a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="admin-rentals.html" class="nav-link">Rentals</a></li>
+        <li><a href="admin-books.html" class="nav-link active">Books</a></li>
+        <li><a href="admin-users.html" class="nav-link">Users</a></li>
+        <li><a href="profile.html" class="nav-link">Profile</a></li>
+        <li><a href="#" id="logoutBtn" class="nav-link">Logout</a></li>
+      </ul>
+      <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1>Books Management</h1>
+        <button class="btn btn-primary" id="addBookBtn">+ Add Book</button>
+      </div>
+      
+      <div class="table-container">
+        <table id="booksTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Image</th>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Category</th>
+              <th>Rental Price</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="8" style="text-align: center;">Loading books...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Book Modal -->
+  <div id="bookModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="form-container" style="max-width: 500px; margin: 2rem;">
+      <h2 id="modalTitle">Add Book</h2>
+      <form id="bookForm" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" name="title" required>
+        </div>
+        <div class="form-group">
+          <label>Author *</label>
+          <input type="text" name="author" required>
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <input type="text" name="category" required>
+        </div>
+        <div class="form-group">
+          <label>Rental Price *</label>
+          <input type="number" name="rental_price" step="0.01" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>Image</label>
+          <input type="file" name="image" accept="image/*">
+        </div>
+        <div style="display: flex; gap: 1rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Save</button>
+          <button type="button" class="btn" id="cancelBookBtn" style="flex: 1; background: var(--border-color);">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    requireAuth();
+    
+    const role = localStorage.getItem('userRole');
+    if (role !== 'admin') {
+      alert('Access denied. Admin role required.');
+      window.location.href = 'login.html';
+    }
+
+    let editingBookId = null;
+    const API_BASE = 'https://prolens.ccs4thyear.com/api';
+
+    // Load all books
+    async function loadBooks() {
+      try {
+        const response = await authAxios({
+          method: 'GET',
+          url: `${API_BASE}/books`
+        });
+        return response.data;
+      } catch (err) {
+        console.error('Error loading books:', err);
+        throw err;
+      }
+    }
+
+    // Add a new book
+    async function addBook(bookData) {
+      const formData = new FormData();
+      formData.append('title', bookData.title);
+      formData.append('author', bookData.author);
+      formData.append('category', bookData.category);
+      formData.append('rental_price', bookData.rental_price);
+      if (bookData.image && bookData.image.size > 0) {
+        formData.append('image', bookData.image);
+      }
+
+      const response = await authAxios({
+        method: 'POST',
+        url: `${API_BASE}/books`,
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    }
+
+    // Update a book
+    async function updateBook(id, bookData) {
+      const formData = new FormData();
+      formData.append('title', bookData.title);
+      formData.append('author', bookData.author);
+      formData.append('category', bookData.category);
+      formData.append('rental_price', bookData.rental_price);
+      if (bookData.image && bookData.image.size > 0) {
+        formData.append('image', bookData.image);
+      }
+
+      const response = await authAxios({
+        method: 'POST',
+        url: `${API_BASE}/books/${id}/update`,
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    }
+
+    // Delete a book
+    async function deleteBookApi(id) {
+      const response = await authAxios({
+        method: 'DELETE',
+        url: `${API_BASE}/books/${id}`
+      });
+      return response.data;
+    }
+
+    async function loadBooksList() {
+      try {
+        const books = await loadBooks();
+        const $tbody = $('#booksTable tbody');
+        
+        if (books.length === 0) {
+          $tbody.html('<tr><td colspan="8" style="text-align: center;">No books found. Add your first book!</td></tr>');
+          return;
+        }
+
+        $tbody.empty();
+        $.each(books, function(index, book) {
+          const imageUrl = book.image_path ? `https://prolens.ccs4thyear.com/${book.image_path}` : 'https://prolens.ccs4thyear.com/uploads/default.png';
+          const $tr = $('<tr>').html(`
+            <td>${book.id}</td>
+            <td><img src="${imageUrl}" alt="${book.title}" class="book-image" onerror="this.src='https://prolens.ccs4thyear.com/uploads/default.png'"></td>
+            <td>${book.title}</td>
+            <td>${book.author}</td>
+            <td>${book.category}</td>
+            <td>₱${parseFloat(book.rental_price).toFixed(2)}</td>
+            <td><span class="status-badge ${book.is_available ? 'status-available' : 'status-unavailable'}">${book.is_available ? 'Available' : 'Unavailable'}</span></td>
+            <td>
+              <button class="btn btn-primary edit-book-btn" data-id="${book.id}">Edit</button>
+              <button class="btn btn-danger delete-book-btn" data-id="${book.id}">Delete</button>
+            </td>
+          `);
+          $tbody.append($tr);
+        });
+      } catch (err) {
+        console.error('Error loading books:', err);
+        $('#booksTable tbody').html('<tr><td colspan="8" style="text-align: center; color: red;">Error loading books. Please try again.</td></tr>');
+      }
+    }
+
+    function showAddBookModal() {
+      editingBookId = null;
+      $('#modalTitle').text('Add Book');
+      $('#bookForm')[0].reset();
+      $('#bookModal').css('display', 'flex');
+    }
+
+    function closeBookModal() {
+      $('#bookModal').hide();
+      editingBookId = null;
+      $('#bookForm')[0].reset();
+    }
+
+    async function editBook(id) {
+      try {
+        const books = await loadBooks();
+        const book = books.find(b => b.id === id);
+        if (!book) {
+          alert('Book not found');
+          return;
+        }
+
+        editingBookId = id;
+        $('#modalTitle').text('Edit Book');
+        $('input[name="title"]').val(book.title);
+        $('input[name="author"]').val(book.author);
+        $('input[name="category"]').val(book.category);
+        $('input[name="rental_price"]').val(book.rental_price);
+        $('#bookModal').css('display', 'flex');
+      } catch (err) {
+        alert('Error loading book: ' + err.message);
+      }
+    }
+
+    async function deleteBook(id) {
+      if (!confirm('Are you sure you want to delete this book?')) return;
+      
+      try {
+        await deleteBookApi(id);
+        alert('Book deleted successfully!');
+        loadBooksList();
+      } catch (err) {
+        alert('Error deleting book: ' + (err.response?.data?.message || err.message));
+      }
+    }
+
+    // jQuery event handlers
+    $(function() {
+      // Add Book button
+      $('#addBookBtn').on('click', showAddBookModal);
+      
+      // Cancel button
+      $('#cancelBookBtn').on('click', closeBookModal);
+      
+      // Edit and Delete buttons (delegated events for dynamic content)
+      $('#booksTable').on('click', '.edit-book-btn', function() {
+        const id = $(this).data('id');
+        editBook(id);
+      });
+      
+      $('#booksTable').on('click', '.delete-book-btn', function() {
+        const id = $(this).data('id');
+        deleteBook(id);
+      });
+
+      // Form submission
+      $('#bookForm').on('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        try {
+          if (editingBookId) {
+            await updateBook(editingBookId, {
+              title: formData.get('title'),
+              author: formData.get('author'),
+              category: formData.get('category'),
+              rental_price: formData.get('rental_price'),
+              image: formData.get('image')
+            });
+            alert('Book updated successfully!');
+          } else {
+            await addBook({
+              title: formData.get('title'),
+              author: formData.get('author'),
+              category: formData.get('category'),
+              rental_price: formData.get('rental_price'),
+              image: formData.get('image')
+            });
+            alert('Book added successfully!');
+          }
+          closeBookModal();
+          loadBooksList();
+        } catch (err) {
+          alert('Error saving book: ' + (err.response?.data?.message || err.message));
+        }
+      });
+
+      // Hamburger menu
+      $('#hamburger').on('click', function() {
+        $(this).toggleClass('active');
+        $('#nav-menu').toggleClass('active');
+      });
+
+      // Load books on page load
+      loadBooksList();
+    });
+  </script>
+</body>
+</html>

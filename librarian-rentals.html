@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Rentals - Librarian - CameraRental</title>
+  <link rel="stylesheet" href="dashboard-styles.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">CameraRental</a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li><a href="librarian-rentals.html" class="nav-link active">Rentals</a></li>
+        <li><a href="profile.html" class="nav-link">Profile</a></li>
+        <li><a href="#" id="logoutBtn" class="nav-link">Logout</a></li>
+      </ul>
+      <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <h1>My Assigned Rentals</h1>
+      
+      <div class="table-container">
+        <table id="rentalsTable">
+          <thead>
+            <tr>
+              <th>Rental ID</th>
+              <th>Client Name</th>
+              <th>Book Title</th>
+              <th>Rental Date</th>
+              <th>Return Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" style="text-align: center;">Loading rentals...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/rentals.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    requireAuth();
+    
+    const role = localStorage.getItem('userRole');
+    if (role !== 'librarian') {
+      alert('Access denied. Librarian role required.');
+      window.location.href = 'login.html';
+    }
+
+    async function loadRentals() {
+      try {
+        const rentals = await loadLibrarianRentals();
+        const tbody = document.querySelector('#rentalsTable tbody');
+        
+        if (rentals.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No rentals assigned to you.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        rentals.forEach(rental => {
+          const tr = document.createElement('tr');
+          
+          let actionButtons = '-';
+          if (rental.status === 'approved') {
+            actionButtons = `<button class="btn btn-success" onclick="handleRelease(${rental.id})">Release</button>`;
+          } else if (rental.status === 'active') {
+            actionButtons = `<button class="btn btn-primary" onclick="handleMarkReturned(${rental.id})">Mark as Returned</button>`;
+          }
+          
+          tr.innerHTML = `
+            <td>${rental.id}</td>
+            <td>${rental.client_name}</td>
+            <td>${rental.book_title}</td>
+            <td>${new Date(rental.rental_date).toLocaleDateString()}</td>
+            <td>${new Date(rental.return_date).toLocaleDateString()}</td>
+            <td><span class="status-badge status-${rental.status}">${rental.status}</span></td>
+            <td>${actionButtons}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Error loading rentals:', err);
+        const tbody = document.querySelector('#rentalsTable tbody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading rentals. Please try again.</td></tr>';
+      }
+    }
+
+    async function handleRelease(id) {
+      if (!confirm('Are you sure you want to release this rental to the client?')) return;
+      
+      try {
+        await releaseRental(id);
+        alert('Rental released successfully!');
+        loadRentals();
+      } catch (err) {
+        alert('Error releasing rental: ' + (err.response?.data?.message || err.message));
+      }
+    }
+
+    async function handleMarkReturned(id) {
+      if (!confirm('Are you sure the client has returned this book?')) return;
+      
+      try {
+        await markRentalReturned(id);
+        alert('Rental marked as returned successfully!');
+        loadRentals();
+      } catch (err) {
+        alert('Error marking rental as returned: ' + (err.response?.data?.message || err.message));
+      }
+    }
+
+    // Make functions global for inline onclick handlers
+    window.handleRelease = handleRelease;
+    window.handleMarkReturned = handleMarkReturned;
+
+    loadRentals();
+
+    const hamburger = document.getElementById('hamburger');
+    const navMenu = document.getElementById('nav-menu');
+    if (hamburger && navMenu) {
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
+      });
+    }
+  </script>
+</body>
+</html>
+

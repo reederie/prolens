@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - CameraRental</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  <style>
+    /* ============================
+       CameraRental Profile Theme
+       (Matching Dashboard Style)
+       ============================ */
+
+    :root {
+      --bg: #f6f8fc;
+      --bg-2: #eef3fb;
+      --panel: rgba(255,255,255,.85);
+      --panel-2: rgba(255,255,255,.94);
+      --border: rgba(15, 23, 42, .10);
+
+      --text: rgba(15, 23, 42, .92);
+      --muted: rgba(15, 23, 42, .62);
+
+      --accent: #2563eb;
+      --accent-2: #06b6d4;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --error: #ef4444;
+
+      --radius: 18px;
+      --shadow: 0 18px 60px rgba(15, 23, 42, .10);
+      --shadow-soft: 0 10px 30px rgba(15, 23, 42, .08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1000px 650px at 90% 0%, rgba(6,182,212,.10), transparent 55%),
+        radial-gradient(900px 700px at 50% 110%, rgba(22,163,74,.08), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--bg-2));
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ============================
+       Topbar / Nav
+       ============================ */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(255,255,255,.70);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 760;
+      letter-spacing: .2px;
+    }
+
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(6,182,212,.10));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .nav-menu {
+      display: flex;
+      list-style: none;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+      border: 1px solid transparent;
+      user-select: none;
+      font-weight: 500;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: rgba(37,99,235,.08);
+      border-color: rgba(37,99,235,.16);
+      transform: translateY(-1px);
+    }
+
+    .nav-link.active {
+      color: rgba(15,23,42,.94);
+      background: rgba(37,99,235,.10);
+      border-color: rgba(37,99,235,.18);
+    }
+
+    /* ============================
+       Main Content
+       ============================ */
+    main {
+      padding: 100px 20px 40px;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(900px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    /* Page Header */
+    .page-header {
+      margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    /* Profile Grid */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 800px) {
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Profile Card */
+    .profile-card {
+      padding: 32px 24px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.80));
+      box-shadow: var(--shadow-soft);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .profile-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(6,182,212,.08));
+    }
+
+    .avatar-container {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 16px;
+      z-index: 1;
+    }
+
+    .avatar {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid white;
+      box-shadow: var(--shadow-soft);
+      background: var(--bg);
+    }
+
+    .avatar-upload {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      border: 3px solid white;
+      box-shadow: var(--shadow-soft);
+      transition: transform .2s ease;
+      font-size: 0.9rem;
+    }
+
+    .avatar-upload:hover {
+      transform: scale(1.1);
+    }
+
+    .avatar-upload input {
+      display: none;
+    }
+
+    .user-name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      position: relative;
+    }
+
+    .user-username {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+    }
+
+    .user-role {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(6,182,212,.08));
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Forms Panel */
+    .forms-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .form-section {
+      padding: 28px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.80));
+      box-shadow: var(--shadow-soft);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(6,182,212,.08));
+      border: 1px solid rgba(37,99,235,.12);
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 650;
+    }
+
+    .section-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* Form Elements */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper .icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      opacity: 0.5;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px 13px 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.80);
+      font-size: 0.95rem;
+      color: var(--text);
+      transition: all .2s ease;
+    }
+
+    input::placeholder {
+      color: var(--muted);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+    }
+
+    input:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: rgba(15,23,42,.04);
+    }
+
+    .input-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all .2s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 6px 20px rgba(37,99,235,.25);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(37,99,235,.30);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      color: var(--text);
+      background: rgba(255,255,255,.80);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,1);
+      border-color: rgba(37,99,235,.25);
+    }
+
+    /* Messages */
+    .message {
+      padding: 14px 18px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .message.error {
+      background: rgba(239,68,68,.08);
+      border: 1px solid rgba(239,68,68,.20);
+      color: var(--error);
+    }
+
+    .message.success {
+      background: rgba(22,163,74,.08);
+      border: 1px solid rgba(22,163,74,.20);
+      color: var(--ok);
+    }
+
+    /* Footer */
+    footer {
+      padding: 24px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,.50);
+      margin-top: 40px;
+    }
+
+    /* Focus States */
+    a:focus-visible, .btn:focus-visible {
+      outline: 3px solid rgba(37,99,235,.45);
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    /* Animations */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="topbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-mark" aria-hidden="true">📷</span>
+        <span class="logo-text">CameraRental</span>
+      </a>
+
+      <ul class="nav-menu">
+        <li><a href="#" id="backToDashboardLink" class="nav-link">← Back to Dashboard</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main>
+    <div class="container">
+      <!-- Page Header -->
+      <div class="page-header fade-in">
+        <h1>My Profile</h1>
+        <p>Manage your account settings and personal information</p>
+      </div>
+
+      <!-- Message -->
+      <div id="message" class="message"></div>
+
+      <!-- Profile Grid -->
+      <div class="profile-grid">
+        <!-- Left: Profile Card -->
+        <div class="profile-card fade-in delay-1">
+          <div class="avatar-container">
+            <img id="avatarImage" class="avatar" src="https://prolens.ccs4thyear.com/uploads/profile.png" alt="Profile Avatar">
+            <label class="avatar-upload" title="Change profile photo">
+              📷
+              <input type="file" id="avatarInput" accept="image/*">
+            </label>
+          </div>
+          <h2 id="userName" class="user-name">Loading...</h2>
+          <p id="userUsername" class="user-username">@username</p>
+          <span class="user-role" id="userRole">Member</span>
+        </div>
+
+        <!-- Right: Forms -->
+        <div class="forms-panel">
+          <!-- Personal Information -->
+          <div class="form-section fade-in delay-1">
+            <div class="section-header">
+              <div class="section-icon">👤</div>
+              <div>
+                <h3 class="section-title">Personal Information</h3>
+                <p class="section-subtitle">Update your profile details</p>
+              </div>
+            </div>
+
+            <form id="profileForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="firstname">First Name</label>
+                  <div class="input-wrapper">
+                    <span class="icon">👤</span>
+                    <input type="text" id="firstname" name="firstname" placeholder="John" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="lastname">Last Name</label>
+                  <div class="input-wrapper">
+                    <span class="icon">👤</span>
+                    <input type="text" id="lastname" name="lastname" placeholder="Doe" required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
+                  <span class="icon">@</span>
+                  <input type="text" id="username" name="username" placeholder="johndoe" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <div class="input-wrapper">
+                  <span class="icon">✉️</span>
+                  <input type="email" id="email" name="email" placeholder="john@example.com" required disabled>
+                </div>
+                <p class="input-hint">Email address cannot be changed</p>
+              </div>
+
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+          </div>
+
+          <!-- Change Password -->
+          <div class="form-section fade-in delay-2">
+            <div class="section-header">
+              <div class="section-icon">🔒</div>
+              <div>
+                <h3 class="section-title">Change Password</h3>
+                <p class="section-subtitle">Update your security credentials</p>
+              </div>
+            </div>
+
+            <form id="passwordForm">
+              <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <div class="input-wrapper">
+                  <span class="icon">🔑</span>
+                  <input type="password" id="currentPassword" name="current_password" placeholder="Enter current password" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newPassword">New Password</label>
+                  <div class="input-wrapper">
+                    <span class="icon">🔒</span>
+                    <input type="password" id="newPassword" name="new_password" placeholder="Enter new password" required minlength="6">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="confirmPassword">Confirm Password</label>
+                  <div class="input-wrapper">
+                    <span class="icon">🔒</span>
+                    <input type="password" id="confirmPassword" name="confirm_password" placeholder="Confirm new password" required minlength="6">
+                  </div>
+                </div>
+              </div>
+              <p class="input-hint" style="margin-bottom: 18px;">Password must be at least 6 characters</p>
+
+              <button type="submit" class="btn btn-primary">Update Password</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 CameraRental. All rights reserved.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    let authToken;
+    let userData;
+
+    $(async function() {
+      authToken = localStorage.getItem('authToken');
+
+      // Wire up Back to Dashboard link
+      $('#backToDashboardLink').on('click', function(e) {
+        e.preventDefault();
+        const role = localStorage.getItem('userRole');
+        goToDashboardForRole(role);
+      });
+
+      // Show user role badge
+      const role = localStorage.getItem('userRole');
+      if (role) {
+        $('#userRole').text(role.charAt(0).toUpperCase() + role.slice(1));
+      }
+
+      if (!authToken) {
+        showMessage('Please log in to view your profile', 'error');
+        setTimeout(() => window.location.href = 'login.html', 2000);
+        return;
+      }
+
+      // Try to get user data from localStorage first
+      const storedUserData = localStorage.getItem('userData');
+      if (storedUserData && storedUserData !== 'null' && storedUserData !== 'undefined') {
+        try {
+          userData = JSON.parse(storedUserData);
+          populateProfileForm(userData);
+        } catch (error) {
+          console.error('Error parsing stored user data:', error);
+          localStorage.removeItem('userData');
+        }
+      }
+
+      // Fetch fresh data from API
+      try {
+        const response = await $.ajax({
+          url: 'https://prolens.ccs4thyear.com/api/profile',
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        userData = response;
+        localStorage.setItem('userData', JSON.stringify(userData));
+        populateProfileForm(userData);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        if (error.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          window.location.href = 'login.html';
+          return;
+        }
+        if (!userData) {
+          showMessage('Error loading profile data', 'error');
+        }
+      }
+    });
+
+    // Populate form with user data
+    function populateProfileForm(data) {
+      const fullName = `${data.firstname || ''} ${data.lastname || ''}`.trim() || 'User';
+      $('#userName').text(fullName);
+      $('#userUsername').text(`@${data.username}`);
+      
+      $('#firstname').val(data.firstname || '');
+      $('#lastname').val(data.lastname || '');
+      $('#username').val(data.username || '');
+      $('#email').val(data.email || '');
+      
+      // Set avatar URL
+      let avatarUrl = 'https://prolens.ccs4thyear.com/uploads/profile.png';
+      if (data.avatar_url) {
+        avatarUrl = data.avatar_url;
+      } else if (data.avatar_path) {
+        if (data.avatar_path.startsWith('http')) {
+          avatarUrl = data.avatar_path;
+        } else {
+          avatarUrl = `https://prolens.ccs4thyear.com/${data.avatar_path.replace(/^\/+/, '')}`;
+        }
+      }
+      $('#avatarImage').attr('src', avatarUrl);
+    }
+
+    // Handle profile form submission
+    $('#profileForm').on('submit', async function(e) {
+      e.preventDefault();
+      
+      const $submitButton = $(this).find('button[type="submit"]');
+      const originalText = $submitButton.text();
+      
+      $submitButton.prop('disabled', true).text('Saving...');
+      
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const formData = new FormData();
+        formData.append('firstname', $('#firstname').val());
+        formData.append('lastname', $('#lastname').val());
+        formData.append('username', $('#username').val());
+        
+        const response = await $.ajax({
+          url: 'https://prolens.ccs4thyear.com/api/profile/update',
+          method: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        
+        showMessage('Profile updated successfully!', 'success');
+        
+        if (userData) {
+          userData.firstname = $('#firstname').val();
+          userData.lastname = $('#lastname').val();
+          userData.username = $('#username').val();
+          localStorage.setItem('userData', JSON.stringify(userData));
+        }
+        
+        const fullName = `${$('#firstname').val()} ${$('#lastname').val()}`.trim();
+        $('#userName').text(fullName || 'User');
+        $('#userUsername').text(`@${$('#username').val()}`);
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        if (error.status === 401) {
+          localStorage.removeItem('authToken');
+          window.location.href = 'login.html';
+          return;
+        }
+        const errorMessage = error.responseJSON?.error || error.statusText || 'Failed to update profile';
+        showMessage(errorMessage, 'error');
+      } finally {
+        $submitButton.prop('disabled', false).text(originalText);
+      }
+    });
+
+    // Handle password form submission
+    $('#passwordForm').on('submit', async function(e) {
+      e.preventDefault();
+
+      const currentPassword = $('#currentPassword').val().trim();
+      const newPassword = $('#newPassword').val().trim();
+      const confirmPassword = $('#confirmPassword').val().trim();
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        showMessage('Please fill in all password fields.', 'error');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showMessage('New passwords do not match.', 'error');
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        showMessage('Password must be at least 6 characters.', 'error');
+        return;
+      }
+
+      const $btn = $(this).find('button[type="submit"]');
+      const origText = $btn.text();
+      $btn.prop('disabled', true).text('Updating...');
+
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) {
+        showMessage('Session expired. Please login again.', 'error');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      try {
+        const response = await $.ajax({
+          url: 'https://prolens.ccs4thyear.com/api/change-password',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword,
+            confirm_password: confirmPassword,
+          }),
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Accept': 'application/json',
+          }
+        });
+
+        showMessage('Password updated successfully!', 'success');
+        $('#passwordForm')[0].reset();
+      } catch (error) {
+        console.error('Error changing password:', error);
+        if (error.status === 401) {
+          localStorage.removeItem('authToken');
+          window.location.href = 'login.html';
+          return;
+        }
+        let errMsg = 'Network error. Please check your connection.';
+        if (error.responseJSON?.error) {
+          if (typeof error.responseJSON.error === 'string') {
+            errMsg = error.responseJSON.error;
+          } else if (typeof error.responseJSON.error === 'object') {
+            const firstError = Object.values(error.responseJSON.error)[0];
+            errMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+          }
+        }
+        showMessage(errMsg, 'error');
+      } finally {
+        $btn.prop('disabled', false).text(origText);
+      }
+    });
+
+    // Handle avatar upload
+    $('#avatarInput').on('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      if (!file.type.startsWith('image/')) {
+        showMessage('Please select an image file', 'error');
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        showMessage('Image must be less than 5MB', 'error');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      try {
+        const authToken = localStorage.getItem('authToken');
+        
+        const response = await $.ajax({
+          url: 'https://prolens.ccs4thyear.com/api/profile/avatar',
+          method: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        
+        showMessage('Profile picture updated successfully!', 'success');
+        const avatarUrl = `https://prolens.ccs4thyear.com/${response.avatar_path}`;
+        $('#avatarImage').attr('src', avatarUrl);
+        
+        if (userData) {
+          userData.avatar_path = response.avatar_path;
+          localStorage.setItem('userData', JSON.stringify(userData));
+        }
+      } catch (error) {
+        console.error('Error updating avatar:', error);
+        if (error.status === 401) {
+          localStorage.removeItem('authToken');
+          window.location.href = 'login.html';
+          return;
+        }
+        const errorMessage = error.responseJSON?.error || error.statusText || 'Failed to update profile picture';
+        showMessage(errorMessage, 'error');
+      }
+    });
+
+    // Show message function
+    function showMessage(message, type) {
+      const $messageEl = $('#message');
+      $messageEl.text(message).removeClass('error success').addClass(`message ${type}`).show();
+      
+      // Scroll to top to show message
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      if (type === 'success') {
+        setTimeout(() => {
+          $messageEl.fadeOut();
+        }, 3000);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - CameraRental</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+
+  <style>
+    /* ============================
+       CameraRental Dashboard Theme
+       (LIGHT THEME)
+       ============================ */
+
+    :root{
+      --bg: #f6f8fc;
+      --bg-2: #eef3fb;
+      --panel: rgba(255,255,255,.85);
+      --panel-2: rgba(255,255,255,.94);
+      --border: rgba(15, 23, 42, .10);
+
+      --text: rgba(15, 23, 42, .92);
+      --muted: rgba(15, 23, 42, .62);
+
+      /* role accents */
+      --accent: #2563eb;     /* blue */
+      --accent-2: #06b6d4;   /* cyan */
+
+      --ok: #16a34a;
+      --warn: #f59e0b;
+
+      --radius: 18px;
+      --shadow: 0 18px 60px rgba(15, 23, 42, .10);
+      --shadow-soft: 0 10px 30px rgba(15, 23, 42, .08);
+    }
+
+    *{ box-sizing: border-box; }
+    html, body{ height: 100%; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1000px 650px at 90% 0%, rgba(6,182,212,.10), transparent 55%),
+        radial-gradient(900px 700px at 50% 110%, rgba(22,163,74,.08), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--bg-2));
+      line-height: 1.35;
+    }
+
+    /* Role-based accent */
+    body.role-admin{ --accent: #7c3aed; --accent-2: #2563eb; }     /* violet/blue */
+    body.role-employee{ --accent: #16a34a; --accent-2: #06b6d4; }  /* green/cyan */
+    body.role-renter{ --accent: #2563eb; --accent-2: #f59e0b; }    /* blue/amber */
+
+    .container{
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    /* ============================
+       Topbar / Nav
+       ============================ */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(14px);
+      background: rgba(255,255,255,.70);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container{
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+    }
+
+    .logo{
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 760;
+      letter-spacing: .2px;
+    }
+
+    .logo-mark{
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(6,182,212,.10));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .nav-menu{
+      display: flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .nav-link{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 10px 12px;
+      border-radius: 12px;
+      transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+
+    .nav-link:hover{
+      color: var(--text);
+      background: rgba(37,99,235,.08);
+      border-color: rgba(37,99,235,.16);
+      transform: translateY(-1px);
+    }
+
+    .nav-link.active{
+      color: rgba(15,23,42,.94);
+      background: rgba(37,99,235,.10);
+      border-color: rgba(37,99,235,.18);
+    }
+
+    .nav-logout{
+      color: rgba(15,23,42,.90);
+      border-color: rgba(15,23,42,.12);
+      background: linear-gradient(135deg, rgba(245,158,11,.12), rgba(37,99,235,.08));
+    }
+    .nav-logout:hover{
+      border-color: rgba(15,23,42,.18);
+    }
+
+    /* Hamburger */
+    .hamburger{
+      display: none;
+      width: 44px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.85);
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: var(--shadow-soft);
+    }
+    .hamburger span{
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: rgba(15, 23, 42, .78);
+      border-radius: 6px;
+    }
+    .hamburger.active span:nth-child(2){ opacity: .35; }
+
+    /* Mobile nav behavior */
+    @media (max-width: 880px){
+      .hamburger{ display: inline-flex; }
+      .nav-menu{
+        position: absolute;
+        top: 64px;
+        right: 0;
+        left: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.92);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        display: none;
+      }
+      .nav-menu.active{ display: flex; }
+      .nav-link{ width: 100%; justify-content: space-between; }
+    }
+
+    /* ============================
+       Hero (camera concept)
+       ============================ */
+    .hero{
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(900px 240px at 40% 0%, rgba(255,255,255,.90), transparent 60%),
+        radial-gradient(700px 420px at 85% 25%, rgba(37,99,235,.10), transparent 60%);
+    }
+
+    .hero-inner{
+      padding: 26px 0 22px;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .badge{
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.85);
+      color: rgba(15, 23, 42, .80);
+      width: fit-content;
+      margin: 0 0 10px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    #dashboardTitle{
+      margin: 0;
+      font-size: clamp(28px, 3.2vw, 40px);
+      letter-spacing: .2px;
+    }
+
+    .hero-subtitle{
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 60ch;
+    }
+
+    /* Camera illustration */
+    .camera-card{
+      width: 100%;
+      max-width: 300px;
+      margin-left: auto;
+      padding: 14px;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255,255,255,.90), rgba(255,255,255,.70));
+      box-shadow: var(--shadow-soft);
+    }
+
+    .camera-top{
+      height: 22px;
+      width: 60%;
+      margin: 0 auto 10px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(15,23,42,.10), rgba(15,23,42,.04));
+      border: 1px solid var(--border);
+    }
+
+    .camera-body{
+      height: 150px;
+      border-radius: 20px;
+      position: relative;
+      background:
+        radial-gradient(220px 140px at 30% 10%, rgba(15,23,42,.08), transparent 55%),
+        linear-gradient(180deg, rgba(15,23,42,.08), rgba(15,23,42,.03));
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .camera-flash{
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      width: 54px;
+      height: 22px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+    }
+
+    .camera-lens{
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 96px;
+      height: 96px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.18);
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), rgba(255,255,255,.10) 55%),
+        radial-gradient(circle at 60% 70%, rgba(15,23,42,.20), rgba(15,23,42,.55) 70%);
+      box-shadow: inset 0 0 0 10px rgba(255,255,255,.30);
+    }
+
+    .lens-ring{
+      position: absolute;
+      inset: 10px;
+      border-radius: 999px;
+      border: 1px dashed rgba(15,23,42,.18);
+      opacity: .85;
+    }
+
+    .lens-glow{
+      position: absolute;
+      inset: -24px;
+      border-radius: 999px;
+      background: radial-gradient(circle,
+        rgba(255,255,255,.0),
+        rgba(255,255,255,.0) 40%,
+        rgba(37,99,235,.18) 70%,
+        rgba(6,182,212,.12));
+      filter: blur(10px);
+      opacity: .9;
+      mix-blend-mode: multiply;
+    }
+
+    @media (max-width: 880px){
+      .hero-inner{ grid-template-columns: 1fr; }
+      .camera-card{ margin: 12px 0 0; }
+    }
+
+    /* ============================
+       Main
+       ============================ */
+    main{ padding: 22px 0 44px; }
+
+    /* ============================
+       Stats Grid / Cards
+       ============================ */
+    .stats-grid{
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 980px){
+      .stats-grid{ grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px){
+      .stats-grid{ grid-template-columns: 1fr; }
+    }
+
+    .stat-card{
+      position: relative;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.72));
+      box-shadow: var(--shadow-soft);
+      padding: 16px;
+      overflow: hidden;
+      min-height: 96px;
+    }
+
+    .stat-card::before{
+      content: "";
+      position: absolute;
+      inset: -2px;
+      background: radial-gradient(500px 120px at 10% 0%,
+        color-mix(in srgb, var(--accent) 16%, transparent),
+        transparent 55%);
+      opacity: .9;
+      pointer-events: none;
+    }
+
+    .stat-icon{
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(37,99,235,.08);
+      border: 1px solid rgba(37,99,235,.14);
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .stat-info h3{
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: .2px;
+    }
+    .stat-info p{
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    /* ============================
+       Quick Actions
+       ============================ */
+    .quick-actions{
+      margin-top: 18px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.78));
+      box-shadow: var(--shadow-soft);
+      padding: 16px;
+    }
+
+    .quick-actions h2{
+      margin: 0 0 12px;
+      font-size: 16px;
+      letter-spacing: .3px;
+      color: rgba(15,23,42,.84);
+    }
+
+    .action-buttons{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .action-btn{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: rgba(15,23,42,.92);
+      padding: 11px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(15,23,42,.10);
+      background:
+        linear-gradient(135deg,
+          color-mix(in srgb, var(--accent) 18%, rgba(255,255,255,.92)),
+          rgba(255,255,255,.78));
+      transition: transform .12s ease, border-color .12s ease, filter .12s ease;
+    }
+
+    .action-btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(15,23,42,.16);
+      filter: brightness(1.03);
+    }
+
+    .action-btn:active{
+      transform: translateY(0px);
+    }
+
+    /* Focus ring */
+    a:focus-visible, .hamburger:focus-visible{
+      outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+      outline-offset: 2px;
+      border-radius: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- NAV -->
+  <nav class="topbar">
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">
+        <span class="logo-mark" aria-hidden="true">📷</span>
+        <span class="logo-text">CameraRental</span>
+      </a>
+
+      <ul class="nav-menu" id="nav-menu">
+        <!-- Admin nav -->
+        <li class="nav-item nav-admin"><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
+        <li class="nav-item nav-admin"><a href="admin-rentals.html" class="nav-link">Rentals</a></li>
+        <li class="nav-item nav-admin"><a href="admin-cameras.html" class="nav-link">Cameras</a></li>
+        <li class="nav-item nav-admin"><a href="admin-users.html" class="nav-link">Users</a></li>
+
+        <!-- Employee nav -->
+        <li class="nav-item nav-employee"><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
+        <li class="nav-item nav-employee"><a href="employee-rentals.html" class="nav-link">Rentals</a></li>
+
+        <!-- Renter nav -->
+        <li class="nav-item nav-renter"><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
+        <li class="nav-item nav-renter"><a href="client-rent-camera.html" class="nav-link">Rent Camera</a></li>
+        <li class="nav-item nav-renter"><a href="client-my-rentals.html" class="nav-link">My Rentals</a></li>
+
+        <!-- Shared -->
+        <li class="nav-item"><a href="profile.html" class="nav-link">Profile</a></li>
+        <li class="nav-item"><a href="#" id="logoutBtn" class="nav-link nav-logout">Logout</a></li>
+      </ul>
+
+      <div class="hamburger" id="hamburger" aria-label="Menu" role="button" tabindex="0">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-inner container">
+      <div class="hero-left">
+        <p class="badge" id="roleBadge">Ready to Shoot</p>
+        <h1 id="dashboardTitle">Dashboard</h1>
+        <p class="hero-subtitle">
+          Track rentals, inventory, and activity at a glance—built for a camera rental workflow.
+        </p>
+      </div>
+
+      <div class="hero-right" aria-hidden="true">
+        <div class="camera-card">
+          <div class="camera-top"></div>
+          <div class="camera-body">
+            <div class="camera-lens">
+              <div class="lens-ring"></div>
+              <div class="lens-glow"></div>
+            </div>
+            <div class="camera-flash"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <div class="container">
+      <!-- Stats Cards -->
+      <div class="stats-grid" id="statsGrid">
+        <!-- Admin stats -->
+        <div class="stat-card role-admin">
+          <div class="stat-icon">📷</div>
+          <div class="stat-info">
+            <h3 id="totalCameras">-</h3>
+            <p>Total Cameras</p>
+          </div>
+        </div>
+
+        <div class="stat-card role-admin">
+          <div class="stat-icon">🧾</div>
+          <div class="stat-info">
+            <h3 id="totalRentals">-</h3>
+            <p>Total Rentals</p>
+          </div>
+        </div>
+
+        <div class="stat-card role-admin">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-info">
+            <h3 id="pendingRentals">-</h3>
+            <p>Pending Rentals</p>
+          </div>
+        </div>
+
+        <div class="stat-card role-admin">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <h3 id="totalUsers">-</h3>
+            <p>Total Users</p>
+          </div>
+        </div>
+
+        <!-- Employee stats -->
+        <div class="stat-card role-employee">
+          <div class="stat-icon">📦</div>
+          <div class="stat-info">
+            <h3 id="assignedRentals">-</h3>
+            <p>Assigned Rentals</p>
+          </div>
+        </div>
+
+        <div class="stat-card role-employee">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-info">
+            <h3 id="pendingRentalsEmployee">-</h3>
+            <p>Pending Rentals</p>
+          </div>
+        </div>
+
+        <div class="stat-card role-employee">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <h3 id="activeRentalsEmployee">-</h3>
+            <p>Active Rentals</p>
+          </div>
+        </div>
+
+        <!-- Renter stats -->
+        <div class="stat-card role-renter">
+          <div class="stat-icon">📚</div>
+          <div class="stat-info">
+            <h3 id="myRentals">-</h3>
+            <p>My Rentals</p>
+          </div>
+        </div>
+
+        <div class="stat-card role-renter">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-info">
+            <h3 id="pendingRentalsRenter">-</h3>
+            <p>Pending Rentals</p>
+          </div>
+        </div>
+
+        <div class="stat-card role-renter">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <h3 id="activeRentalsRenter">-</h3>
+            <p>Active Rentals</p>
+          </div>
+        </div>
+
+        <div class="stat-card role-renter">
+          <div class="stat-icon">🟢</div>
+          <div class="stat-info">
+            <h3 id="availableCameras">-</h3>
+            <p>Available Cameras</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+          <!-- Admin actions -->
+          <a href="admin-cameras.html" class="action-btn role-admin">Manage Cameras</a>
+          <a href="admin-rentals.html" class="action-btn role-admin">View Rentals</a>
+          <a href="admin-users.html" class="action-btn role-admin">Manage Users</a>
+
+          <!-- Employee actions -->
+          <a href="employee-rentals.html" class="action-btn role-employee">View My Rentals</a>
+
+          <!-- Renter actions -->
+          <a href="client-rent-camera.html" class="action-btn role-renter">Rent a Camera</a>
+          <a href="client-my-rentals.html" class="action-btn role-renter">View My Rentals</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/main.js"></script>
+
+  <script>
+    requireAuth();
+
+    // Update title and visible sections based on role
+    const $titleEl = $('#dashboardTitle');
+    const $body = $('body');
+
+    function showRole(roleName) {
+      // Remove all role classes first
+      $body.removeClass('role-admin role-employee role-renter');
+      $body.addClass('role-' + roleName);
+
+      $('.role-admin, .role-employee, .role-renter, .nav-admin, .nav-employee, .nav-renter').hide();
+      $('.role-' + roleName + ', .nav-' + roleName).show();
+    }
+
+    function applyRoleUI(role) {
+      if (!role) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (role === 'admin') {
+        $titleEl.text('Admin Dashboard');
+        showRole('admin');
+      } else if (role === 'employee') {
+        $titleEl.text('Employee Dashboard');
+        showRole('employee');
+      } else {
+        $titleEl.text('Renter Dashboard');
+        showRole('renter');
+      }
+
+      const $badge = $('#roleBadge');
+      if ($badge.length) {
+        $badge.text(
+          role === 'admin' ? 'Admin Control Panel' :
+          role === 'employee' ? 'Employee Work Queue' :
+          'Renter Overview'
+        );
+      }
+    }
+
+    // Get role from localStorage initially
+    let role = localStorage.getItem('userRole');
+
+    // Refresh role from server on page load to ensure it's up to date
+    (async function() {
+      if (typeof refreshUserRole === 'function') {
+        const refreshedRole = await refreshUserRole();
+        if (refreshedRole) role = refreshedRole;
+      }
+
+      // Apply UI based on current role
+      applyRoleUI(role);
+    })();
+
+    // Load dashboard stats and map to the appropriate cards
+    async function loadStats() {
+      try {
+        const stats = await loadDashboardStats();
+        console.log('Dashboard stats loaded:', stats);
+
+        if (role === 'admin') {
+          $('#totalCameras').text(stats.total_cameras || 0);
+          $('#totalRentals').text(stats.total_rentals || 0);
+          $('#pendingRentals').text(stats.pending_rentals || 0);
+          $('#totalUsers').text(stats.total_users || 0);
+        } else if (role === 'employee') {
+          $('#assignedRentals').text(stats.assigned_rentals || 0);
+          $('#pendingRentalsEmployee').text(stats.pending_rentals || 0);
+          $('#activeRentalsEmployee').text(stats.active_rentals || 0);
+        } else {
+          $('#myRentals').text(stats.my_rentals || 0);
+          $('#pendingRentalsRenter').text(stats.pending_rentals || 0);
+          $('#activeRentalsRenter').text(stats.active_rentals || 0);
+          $('#availableCameras').text(stats.available_cameras || 0);
+        }
+      } catch (err) {
+        console.error('Error loading stats:', err);
+        if (err.response && err.response.status === 401) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Session Expired',
+            text: 'Please log in again.',
+            confirmButtonText: 'Go to Login'
+          }).then(() => {
+            window.location.href = 'login.html';
+          });
+        } else {
+          console.error('Failed to load dashboard stats. Please refresh the page.');
+        }
+      }
+    }
+
+    loadStats();
+
+    // Hamburger menu with jQuery
+    $(function() {
+      $('#hamburger').on('click', function() {
+        $(this).toggleClass('active');
+        $('#nav-menu').toggleClass('active');
+      });
+
+      // Keyboard accessibility
+      $('#hamburger').on('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          $(this).click();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - CameraRental</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  <style>
+    /* ============================
+       CameraRental Login Theme
+       (Matching Dashboard Style)
+       ============================ */
+
+    :root {
+      --bg: #f6f8fc;
+      --bg-2: #eef3fb;
+      --panel: rgba(255,255,255,.85);
+      --panel-2: rgba(255,255,255,.94);
+      --border: rgba(15, 23, 42, .10);
+
+      --text: rgba(15, 23, 42, .92);
+      --muted: rgba(15, 23, 42, .62);
+
+      --accent: #2563eb;
+      --accent-2: #06b6d4;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --error: #ef4444;
+
+      --radius: 18px;
+      --shadow: 0 18px 60px rgba(15, 23, 42, .10);
+      --shadow-soft: 0 10px 30px rgba(15, 23, 42, .08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1000px 650px at 90% 0%, rgba(6,182,212,.10), transparent 55%),
+        radial-gradient(900px 700px at 50% 110%, rgba(22,163,74,.08), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--bg-2));
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ============================
+       Topbar / Nav
+       ============================ */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(255,255,255,.70);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 760;
+      letter-spacing: .2px;
+    }
+
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(37,99,235,.14), rgba(6,182,212,.10));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .nav-menu {
+      display: flex;
+      list-style: none;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+      border: 1px solid transparent;
+      user-select: none;
+      font-weight: 500;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: rgba(37,99,235,.08);
+      border-color: rgba(37,99,235,.16);
+      transform: translateY(-1px);
+    }
+
+    .nav-link.active {
+      color: rgba(15,23,42,.94);
+      background: rgba(37,99,235,.10);
+      border-color: rgba(37,99,235,.18);
+    }
+
+    .nav-link.cta {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: transparent;
+    }
+
+    .nav-link.cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37,99,235,.25);
+    }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      width: 44px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.85);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: rgba(15, 23, 42, .78);
+      border-radius: 6px;
+      transition: all .25s ease;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    @media (max-width: 768px) {
+      .hamburger { display: inline-flex; }
+      .nav-menu {
+        position: absolute;
+        top: 64px;
+        right: 0;
+        left: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.95);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        display: none;
+      }
+      .nav-menu.active { display: flex; }
+      .nav-link { width: 100%; justify-content: center; }
+    }
+
+    /* ============================
+       Main Content
+       ============================ */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 100px 20px 40px;
+    }
+
+    .login-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      width: min(1000px, calc(100% - 40px));
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .login-wrapper {
+        grid-template-columns: 1fr;
+        max-width: 450px;
+      }
+      .login-visual { display: none; }
+    }
+
+    /* Left side - Visual */
+    .login-visual {
+      text-align: center;
+    }
+
+    .visual-content h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .visual-content p {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 30px;
+    }
+
+    /* Camera card */
+    .camera-card {
+      width: 100%;
+      max-width: 280px;
+      margin: 0 auto;
+      padding: 16px;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255,255,255,.90), rgba(255,255,255,.70));
+      box-shadow: var(--shadow-soft);
+    }
+
+    .camera-top {
+      height: 22px;
+      width: 55%;
+      margin: 0 auto 10px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(15,23,42,.10), rgba(15,23,42,.04));
+      border: 1px solid var(--border);
+    }
+
+    .camera-body {
+      height: 140px;
+      border-radius: 18px;
+      position: relative;
+      background:
+        radial-gradient(180px 120px at 25% 10%, rgba(15,23,42,.08), transparent 55%),
+        linear-gradient(180deg, rgba(15,23,42,.08), rgba(15,23,42,.03));
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .camera-lens {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 90px;
+      height: 90px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,.18);
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), rgba(255,255,255,.10) 55%),
+        radial-gradient(circle at 60% 70%, rgba(15,23,42,.20), rgba(15,23,42,.55) 70%);
+      box-shadow: inset 0 0 0 10px rgba(255,255,255,.30);
+    }
+
+    .lens-ring {
+      position: absolute;
+      inset: 10px;
+      border-radius: 999px;
+      border: 1px dashed rgba(15,23,42,.18);
+    }
+
+    .lens-glow {
+      position: absolute;
+      inset: -20px;
+      border-radius: 999px;
+      background: radial-gradient(circle, transparent 30%, rgba(37,99,235,.15) 70%);
+      filter: blur(12px);
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    .camera-flash {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 50px;
+      height: 20px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+    }
+
+    /* Right side - Form */
+    .form-container {
+      padding: 40px 36px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.80));
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .form-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(6,182,212,.08));
+      border: 1px solid rgba(37,99,235,.14);
+    }
+
+    .form-header h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .form-header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper .icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      opacity: 0.5;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 14px 14px 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.80);
+      font-size: 0.95rem;
+      color: var(--text);
+      transition: all .2s ease;
+    }
+
+    input::placeholder {
+      color: var(--muted);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all .2s ease;
+      border: none;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 8px 24px rgba(37,99,235,.25);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(37,99,235,.30);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .form-footer {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .forgot-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color .15s ease;
+    }
+
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+
+    .register-link {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .register-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* ============================
+       Footer
+       ============================ */
+    footer {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,.50);
+    }
+
+    /* Focus States */
+    a:focus-visible, .btn:focus-visible, .hamburger:focus-visible {
+      outline: 3px solid rgba(37,99,235,.45);
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    /* Animations */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="topbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <span class="logo-mark" aria-hidden="true">📷</span>
+        <span class="logo-text">CameraRental</span>
+      </a>
+
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="login.html" class="nav-link active">Login</a></li>
+        <li><a href="register.html" class="nav-link cta">Get Started</a></li>
+      </ul>
+
+      <div class="hamburger" id="hamburger" aria-label="Menu" role="button" tabindex="0">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main>
+    <div class="login-wrapper">
+      <!-- Left Visual -->
+      <div class="login-visual fade-in">
+        <div class="visual-content">
+          <h2>Welcome Back!</h2>
+          <p>Access your account to manage rentals, browse equipment, and track your bookings.</p>
+        </div>
+        <div class="camera-card">
+          <div class="camera-top"></div>
+          <div class="camera-body">
+            <div class="camera-lens">
+              <div class="lens-ring"></div>
+              <div class="lens-glow"></div>
+            </div>
+            <div class="camera-flash"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <div class="form-container fade-in delay-1">
+        <div class="form-header">
+          <div class="form-icon">🔐</div>
+          <h2>Sign In</h2>
+          <p>Enter your credentials to continue</p>
+        </div>
+
+        <form id="loginForm">
+          <div class="input-group">
+            <label for="username">Username</label>
+            <div class="input-wrapper">
+              <span class="icon">👤</span>
+              <input type="text" id="username" name="username" placeholder="Enter your username" required>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <span class="icon">🔒</span>
+              <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Sign In →</button>
+        </form>
+
+        <div class="form-footer">
+          <a href="forgot.html" class="forgot-link">Forgot your password?</a>
+          <p class="register-link">Don't have an account? <a href="register.html">Create one</a></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 CameraRental. All rights reserved.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/login.js"></script>
+  
+  <script>
+    $(function() {
+      // Hamburger menu
+      $('#hamburger').on('click', function() {
+        $(this).toggleClass('active');
+        $('#nav-menu').toggleClass('active');
+      });
+
+      // Keyboard accessibility
+      $('#hamburger').on('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          $(this).click();
+        }
+      });
+
+      // Close menu on link click
+      $('.nav-link').on('click', function() {
+        $('#hamburger').removeClass('active');
+        $('#nav-menu').removeClass('active');
+      });
+
+      // Redirect if already logged in
+      redirectIfLoggedIn();
+    });
+  </script>
+</body>
+</html>

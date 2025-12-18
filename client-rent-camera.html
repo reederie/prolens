@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rent a Camera - Renter - CameraRental</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  <link rel="stylesheet" href="light-theme.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">
+        <span class="logo-mark" aria-hidden="true">📷</span>
+        <span class="logo-text">CameraRental</span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li class="nav-item nav-renter"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li class="nav-item nav-renter"><a href="client-rent-camera.html" class="nav-link active">Rent Camera</a></li>
+        <li class="nav-item nav-renter"><a href="client-my-rentals.html" class="nav-link">My Rentals</a></li>
+        <li class="nav-item"><a href="profile.html" class="nav-link">Profile</a></li>
+        <li class="nav-item"><a href="#" id="logoutBtn" class="nav-link nav-logout">Logout</a></li>
+      </ul>
+      <div class="hamburger" id="hamburger" aria-label="Menu" role="button" tabindex="0">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-inner container">
+      <div class="hero-left">
+        <p class="badge">New Rental</p>
+        <h1 class="page-title">Rent a Camera</h1>
+        <p class="hero-subtitle">
+          Browse available cameras and submit your rental request.
+        </p>
+      </div>
+      <div class="hero-right" aria-hidden="true">
+        <div class="camera-card">
+          <div class="camera-top"></div>
+          <div class="camera-body">
+            <div class="camera-lens">
+              <div class="lens-ring"></div>
+              <div class="lens-glow"></div>
+            </div>
+            <div class="camera-flash"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="form-container">
+        <form id="rentCameraForm">
+          <div class="form-group">
+            <label>Select Camera *</label>
+            <select name="camera_id" id="cameraSelect" required>
+              <option value="">Loading cameras...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Rental Duration (days) *</label>
+            <input type="number" name="rental_duration" min="1" required>
+          </div>
+          <div class="form-group">
+            <label>Rental Date *</label>
+            <input type="date" name="rental_date" required id="rentalDate" min="">
+            <small style="color: var(--text-secondary); font-size: 0.875rem; display: block; margin-top: 0.25rem;">Rental must start from tomorrow onwards</small>
+          </div>
+          <div class="form-group">
+            <label>Return Date (auto-calculated)</label>
+            <input type="date" name="return_date" id="returnDate" readonly style="background: var(--secondary-bg);">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Rental Request</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/cameras.js"></script>
+  <script src="js/rentals.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    requireAuth();
+    
+    // Role-based navigation visibility
+    function showRole(roleName) {
+      const body = document.body;
+      body.classList.remove('role-admin', 'role-employee', 'role-renter');
+      body.classList.add('role-' + roleName);
+
+      document.querySelectorAll('.role-admin, .role-employee, .role-renter, .nav-admin, .nav-employee, .nav-renter')
+        .forEach(el => {
+          el.style.display = 'none';
+        });
+
+      document.querySelectorAll('.role-' + roleName + ', .nav-' + roleName)
+        .forEach(el => {
+          el.style.display = '';
+        });
+    }
+    
+    // Check and refresh role
+    async function checkRole() {
+      let role = localStorage.getItem('userRole');
+      
+      // Refresh role from server
+      if (typeof refreshUserRole === 'function') {
+        const refreshedRole = await refreshUserRole();
+        if (refreshedRole) {
+          role = refreshedRole;
+        }
+      }
+      
+      if (role !== 'renter') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Access Denied',
+          text: 'Renter role required.',
+          confirmButtonText: 'Go to Login'
+        }).then(() => {
+          window.location.href = 'login.html';
+        });
+        return false;
+      }
+      
+      // Apply role-based UI
+      showRole('renter');
+      return true;
+    }
+    
+    // Check role and proceed
+    checkRole().then(hasAccess => {
+      if (!hasAccess) return;
+      // Continue with page initialization
+      loadAvailableCameras();
+    });
+
+    // Set minimum date to tomorrow (cannot rent starting today)
+    function setMinimumDate() {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      
+      // Format as YYYY-MM-DD (local date, not UTC)
+      const year = tomorrow.getFullYear();
+      const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const day = String(tomorrow.getDate()).padStart(2, '0');
+      const tomorrowStr = `${year}-${month}-${day}`;
+      
+      const rentalDateInput = document.getElementById('rentalDate');
+      rentalDateInput.setAttribute('min', tomorrowStr);
+      rentalDateInput.setAttribute('value', ''); // Clear any existing value
+    }
+
+    // Validate that rental date is not today
+    function validateRentalDate(selectedDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to midnight for comparison
+      
+      const selected = new Date(selectedDate);
+      selected.setHours(0, 0, 0, 0);
+      
+      if (selected.getTime() <= today.getTime()) {
+        return false; // Cannot select today or past dates
+      }
+      return true;
+    }
+
+    function calculateReturnDate() {
+      const rentalDate = document.getElementById('rentalDate').value;
+      const duration = parseInt(document.querySelector('input[name="rental_duration"]').value) || 0;
+      
+      if (rentalDate && duration > 0) {
+        const date = new Date(rentalDate);
+        date.setDate(date.getDate() + duration);
+        
+        // Format as YYYY-MM-DD (local date)
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        document.getElementById('returnDate').value = `${year}-${month}-${day}`;
+      }
+    }
+
+    // Initialize minimum date
+    setMinimumDate();
+
+    // Prevent selecting today's date
+    document.getElementById('rentalDate').addEventListener('change', function(e) {
+      const selectedDate = e.target.value;
+      if (selectedDate && !validateRentalDate(selectedDate)) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Invalid Date',
+          text: 'Rental date must be tomorrow or later. You cannot rent starting from today.',
+          confirmButtonText: 'OK'
+        });
+        e.target.value = '';
+        setMinimumDate(); // Reset to tomorrow
+        return;
+      }
+      calculateReturnDate();
+    });
+
+    document.querySelector('input[name="rental_duration"]').addEventListener('input', calculateReturnDate);
+
+    async function loadAvailableCameras() {
+      try {
+        // The backend now automatically filters out cameras the renter has already completed
+        const cameras = await loadCameras();
+        const select = document.getElementById('cameraSelect');
+        
+        if (cameras.length === 0) {
+          select.innerHTML = '<option value="">No available cameras (you may have already rented all available cameras)</option>';
+          return;
+        }
+
+        select.innerHTML = '<option value="">Select a camera...</option>';
+        cameras.forEach(camera => {
+          const option = document.createElement('option');
+          option.value = camera.id;
+          option.textContent = `${camera.brand} ${camera.model} - ₱${parseFloat(camera.rental_price).toFixed(2)}/day`;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Error loading cameras:', err);
+        document.getElementById('cameraSelect').innerHTML = '<option value="">Error loading cameras</option>';
+      }
+    }
+
+    document.getElementById('rentCameraForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      
+      // Validate rental date
+      const rentalDate = formData.get('rental_date');
+      if (!validateRentalDate(rentalDate)) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Invalid Date',
+          text: 'Rental date must be tomorrow or later. You cannot rent starting from today.',
+          confirmButtonText: 'OK'
+        });
+        return;
+      }
+      
+      const rentalData = {
+        camera_id: parseInt(formData.get('camera_id')),
+        rental_duration: parseInt(formData.get('rental_duration')),
+        rental_date: rentalDate
+      };
+
+      try {
+        await createRental(rentalData);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Request Submitted!',
+          text: 'Rental request submitted successfully!',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        e.target.reset();
+        document.getElementById('returnDate').value = '';
+        loadAvailableCameras();
+      } catch (err) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.response?.data?.message || err.message || 'Error submitting rental'
+        });
+      }
+    });
+
+    // loadAvailableCameras() is now called in checkRole() callback
+
+    const hamburger = document.getElementById('hamburger');
+    const navMenu = document.getElementById('nav-menu');
+    if (hamburger && navMenu) {
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navMenu.classList.toggle('active');
+      });
+    }
+  </script>
+</body>
+</html>
+

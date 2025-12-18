@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rentals Management - Admin - CameraRental</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
+  <link rel="stylesheet" href="light-theme.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="nav-container">
+      <a href="dashboard.html" class="logo">
+        <span class="logo-mark" aria-hidden="true">📷</span>
+        <span class="logo-text">CameraRental</span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li class="nav-item nav-admin"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+        <li class="nav-item nav-admin"><a href="admin-rentals.html" class="nav-link active">Rentals</a></li>
+        <li class="nav-item nav-admin"><a href="admin-cameras.html" class="nav-link">Cameras</a></li>
+        <li class="nav-item nav-admin"><a href="admin-users.html" class="nav-link">Users</a></li>
+        <li class="nav-item"><a href="profile.html" class="nav-link">Profile</a></li>
+        <li class="nav-item"><a href="#" id="logoutBtn" class="nav-link nav-logout">Logout</a></li>
+      </ul>
+      <div class="hamburger" id="hamburger" aria-label="Menu" role="button" tabindex="0">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-inner container">
+      <div class="hero-left">
+        <p class="badge">Rental Overview</p>
+        <h1 class="page-title">All Camera Rentals</h1>
+        <p class="hero-subtitle">
+          View and monitor all rental transactions across the system.
+        </p>
+      </div>
+      <div class="hero-right" aria-hidden="true">
+        <div class="camera-card">
+          <div class="camera-top"></div>
+          <div class="camera-body">
+            <div class="camera-lens">
+              <div class="lens-ring"></div>
+              <div class="lens-glow"></div>
+            </div>
+            <div class="camera-flash"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      
+      <div class="table-container">
+        <table id="rentalsTable">
+          <thead>
+            <tr>
+              <th>Rental ID</th>
+              <th>Renter Name</th>
+              <th>Camera</th>
+              <th>Rental Date</th>
+              <th>Return Date</th>
+              <th>Employee</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" style="text-align: center;">Loading rentals...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/rentals.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    requireAuth();
+    
+    // Role-based navigation visibility
+    function showRole(roleName) {
+      const $body = $('body');
+      $body.removeClass('role-admin role-employee role-renter');
+      $body.addClass('role-' + roleName);
+
+      $('.role-admin, .role-employee, .role-renter, .nav-admin, .nav-employee, .nav-renter').hide();
+      $('.role-' + roleName + ', .nav-' + roleName).show();
+    }
+    
+    // Check and refresh role
+    async function checkRole() {
+      let role = localStorage.getItem('userRole');
+      
+      // Refresh role from server
+      if (typeof refreshUserRole === 'function') {
+        const refreshedRole = await refreshUserRole();
+        if (refreshedRole) {
+          role = refreshedRole;
+        }
+      }
+      
+      if (role !== 'admin') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Access Denied',
+          text: 'Admin role required.',
+          confirmButtonText: 'Go to Login'
+        }).then(() => {
+          window.location.href = 'login.html';
+        });
+        return false;
+      }
+      
+      // Apply role-based UI
+      showRole('admin');
+      return true;
+    }
+    
+    // Check role and proceed
+    checkRole().then(hasAccess => {
+      if (!hasAccess) return;
+      // Continue with page initialization
+      loadRentals();
+    });
+
+    async function loadRentals() {
+      try {
+        const rentals = await loadAllRentals();
+        const $tbody = $('#rentalsTable tbody');
+        
+        if (rentals.length === 0) {
+          $tbody.html('<tr><td colspan="7" style="text-align: center;">No rentals found.</td></tr>');
+          return;
+        }
+
+        $tbody.empty();
+        $.each(rentals, function(index, rental) {
+          const actionButtons = rental.status === 'pending' 
+            ? `<button class="btn btn-success approve-btn" data-id="${rental.id}">Approve</button>
+               <button class="btn btn-danger decline-btn" data-id="${rental.id}">Decline</button>`
+            : '-';
+          
+          const $tr = $('<tr>').html(`
+            <td>${rental.id}</td>
+            <td>${rental.renter_name}</td>
+            <td>${rental.camera_info}</td>
+            <td>${new Date(rental.rental_date).toLocaleDateString()}</td>
+            <td>${new Date(rental.return_date).toLocaleDateString()}</td>
+            <td>${rental.employee_name || 'Unassigned'}</td>
+            <td><span class="status-badge status-${rental.status}">${rental.status}</span></td>
+            <td>${actionButtons}</td>
+          `);
+          $tbody.append($tr);
+        });
+      } catch (err) {
+        console.error('Error loading rentals:', err);
+        $('#rentalsTable tbody').html('<tr><td colspan="7" style="text-align: center; color: red;">Error loading rentals. Please try again.</td></tr>');
+      }
+    }
+
+    async function handleApprove(id) {
+      const result = await Swal.fire({
+        icon: 'question',
+        title: 'Approve Rental?',
+        text: 'Are you sure you want to approve this rental?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, approve it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#16a34a'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        const response = await approveRental(id);
+        const message = response?.message || 'Rental approved successfully!';
+        await Swal.fire({
+          icon: 'success',
+          title: 'Approved!',
+          text: message,
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadRentals();
+      } catch (err) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.response?.data?.message || err.message || 'Error approving rental'
+        });
+      }
+    }
+
+    async function handleDecline(id) {
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: 'Decline Rental?',
+        text: 'Are you sure you want to decline this rental?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, decline it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ef4444'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        await declineRental(id);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Declined!',
+          text: 'Rental declined successfully!',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadRentals();
+      } catch (err) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.response?.data?.message || err.message || 'Error declining rental'
+        });
+      }
+    }
+
+    // jQuery event handlers
+    $(function() {
+      // Delegated events for dynamic content
+      $('#rentalsTable').on('click', '.approve-btn', function() {
+        handleApprove($(this).data('id'));
+      });
+      
+      $('#rentalsTable').on('click', '.decline-btn', function() {
+        handleDecline($(this).data('id'));
+      });
+
+      // Hamburger menu
+      $('#hamburger').on('click', function() {
+        $(this).toggleClass('active');
+        $('#nav-menu').toggleClass('active');
+      });
+    });
+
+    // Make functions global for inline onclick handlers
+    window.handleApprove = handleApprove;
+    window.handleDecline = handleDecline;
+  </script>
+</body>
+</html>
+
