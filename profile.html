@@ -206,7 +206,28 @@
       object-fit: cover;
       border: 4px solid white;
       box-shadow: var(--shadow-soft);
-      background: var(--bg);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    
+    /* Fallback avatar styles */
+    .avatar-fallback {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 4px solid white;
+      box-shadow: var(--shadow-soft);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: white;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
     .avatar-upload {
@@ -537,7 +558,8 @@
         <!-- Left: Profile Card -->
         <div class="profile-card fade-in delay-1">
           <div class="avatar-container" id="avatarContainer" title="Click to change profile photo">
-            <img id="avatarImage" class="avatar" src="https://prolens.ccs4thyear.com/uploads/profile.png" alt="Profile Avatar">
+            <img id="avatarImage" class="avatar" src="" alt="Profile Avatar" style="display: none;" onerror="handleAvatarError()">
+            <div id="avatarFallback" class="avatar-fallback">👤</div>
             <label class="avatar-upload" title="Change profile photo">
               📷
               <input type="file" id="avatarInput" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp">
@@ -655,6 +677,15 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="js/auth.js"></script>
   <script>
+    // Override the intrusive error popup from auth.js - just log errors to console instead
+    if (typeof showErrorAlert === 'function') {
+      window.originalShowErrorAlert = showErrorAlert;
+    }
+    window.showErrorAlert = function(error, context) {
+      // Just log to console instead of showing popup
+      console.warn('API Error (suppressed popup):', context, error);
+    };
+    
     let authToken;
     let userData;
 
@@ -705,8 +736,10 @@
         const response = await $.ajax({
           url: 'https://prolens.ccs4thyear.com/api/profile',
           method: 'GET',
+          timeout: 10000, // 10 second timeout
           headers: {
-            'Authorization': `Bearer ${authToken}`
+            'Authorization': `Bearer ${authToken}`,
+            'Accept': 'application/json'
           }
         });
 
@@ -714,16 +747,22 @@
         localStorage.setItem('userData', JSON.stringify(userData));
         populateProfileForm(userData);
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        // Only log to console, don't show intrusive popups
+        console.warn('Error fetching profile:', error);
+        
+        // Handle 401 unauthorized
         if (error.status === 401) {
           localStorage.removeItem('authToken');
           localStorage.removeItem('userData');
           window.location.href = 'login.html';
           return;
         }
+        
+        // If we don't have cached data, show a subtle message
         if (!userData) {
-          showMessage('Error loading profile data', 'error');
+          showMessage('Could not connect to server. Using cached data if available.', 'error');
         }
+        // If we have cached data, just use it silently
       }
     });
 
@@ -738,18 +777,28 @@
       $('#username').val(data.username || '');
       $('#email').val(data.email || '');
       
+      // Update fallback initials
+      const initials = ((data.firstname || '').charAt(0) + (data.lastname || '').charAt(0)).toUpperCase();
+      if (initials) {
+        $('#avatarFallback').text(initials).css('font-size', '2rem');
+      }
+      
       // Set avatar URL with cache-busting
       setAvatarImage(data.avatar_url, data.avatar_path);
     }
     
     // Helper function to set avatar with cache-busting
     function setAvatarImage(avatarUrl, avatarPath) {
-      let url = 'https://prolens.ccs4thyear.com/uploads/profile.png';
+      const $avatarImage = $('#avatarImage');
+      const $avatarFallback = $('#avatarFallback');
       const cacheBuster = '?t=' + Date.now();
       
-      if (avatarUrl) {
+      let url = null;
+      
+      // Try to build the URL from avatarUrl or avatarPath
+      if (avatarUrl && avatarUrl !== 'null' && avatarUrl !== 'undefined') {
         url = avatarUrl;
-      } else if (avatarPath) {
+      } else if (avatarPath && avatarPath !== 'null' && avatarPath !== 'undefined' && avatarPath !== 'uploads/profile.png') {
         if (avatarPath.startsWith('http')) {
           url = avatarPath;
         } else {
@@ -757,14 +806,59 @@
         }
       }
       
-      // Add cache-buster to prevent browser caching
-      if (!url.includes('?')) {
-        url += cacheBuster;
+      // If we have a valid URL, try to load the image
+      if (url) {
+        // Add cache-buster to prevent browser caching
+        if (!url.includes('?')) {
+          url += cacheBuster;
+        } else {
+          url += '&cb=' + Date.now();
+        }
+        
+        // Create a test image to check if URL is valid
+        const testImg = new Image();
+        testImg.onload = function() {
+          // Image loaded successfully, show it
+          $avatarImage.attr('src', url).show();
+          $avatarFallback.hide();
+        };
+        testImg.onerror = function() {
+          // Image failed to load, show fallback
+          console.log('Avatar image failed to load:', url);
+          showAvatarFallback();
+        };
+        testImg.src = url;
       } else {
-        url += '&t=' + Date.now();
+        // No valid URL, show fallback
+        showAvatarFallback();
+      }
+    }
+    
+    // Show avatar fallback (initials or icon)
+    function showAvatarFallback() {
+      const $avatarImage = $('#avatarImage');
+      const $avatarFallback = $('#avatarFallback');
+      
+      $avatarImage.hide();
+      
+      // Try to show initials if we have user data
+      if (userData && (userData.firstname || userData.lastname)) {
+        const initials = ((userData.firstname || '').charAt(0) + (userData.lastname || '').charAt(0)).toUpperCase();
+        if (initials) {
+          $avatarFallback.text(initials).css('font-size', '2rem');
+        } else {
+          $avatarFallback.text('👤').css('font-size', '2.5rem');
+        }
+      } else {
+        $avatarFallback.text('👤').css('font-size', '2.5rem');
       }
       
-      $('#avatarImage').attr('src', url);
+      $avatarFallback.show();
+    }
+    
+    // Handle avatar error (called from onerror)
+    function handleAvatarError() {
+      showAvatarFallback();
     }
 
     // Handle profile form submission
@@ -789,8 +883,10 @@
           data: formData,
           processData: false,
           contentType: false,
+          timeout: 15000,
           headers: {
-            'Authorization': `Bearer ${authToken}`
+            'Authorization': `Bearer ${authToken}`,
+            'Accept': 'application/json'
           }
         });
         
@@ -807,13 +903,21 @@
         $('#userName').text(fullName || 'User');
         $('#userUsername').text(`@${$('#username').val()}`);
       } catch (error) {
-        console.error('Error updating profile:', error);
+        console.warn('Error updating profile:', error);
         if (error.status === 401) {
           localStorage.removeItem('authToken');
           window.location.href = 'login.html';
           return;
         }
-        const errorMessage = error.responseJSON?.error || error.statusText || 'Failed to update profile';
+        // Show simple error message
+        let errorMessage = 'Failed to update profile. Please try again.';
+        if (error.status === 0) {
+          errorMessage = 'Could not connect to server. Please check your internet connection.';
+        } else if (error.responseJSON?.error) {
+          errorMessage = typeof error.responseJSON.error === 'string' 
+            ? error.responseJSON.error 
+            : 'Validation error. Please check your input.';
+        }
         showMessage(errorMessage, 'error');
       } finally {
         $submitButton.prop('disabled', false).text(originalText);
@@ -859,6 +963,7 @@
           url: 'https://prolens.ccs4thyear.com/api/change-password',
           method: 'POST',
           contentType: 'application/json',
+          timeout: 15000,
           data: JSON.stringify({
             current_password: currentPassword,
             new_password: newPassword,
@@ -873,14 +978,16 @@
         showMessage('Password updated successfully!', 'success');
         $('#passwordForm')[0].reset();
       } catch (error) {
-        console.error('Error changing password:', error);
+        console.warn('Error changing password:', error);
         if (error.status === 401) {
           localStorage.removeItem('authToken');
           window.location.href = 'login.html';
           return;
         }
-        let errMsg = 'Network error. Please check your connection.';
-        if (error.responseJSON?.error) {
+        let errMsg = 'Failed to update password. Please try again.';
+        if (error.status === 0) {
+          errMsg = 'Could not connect to server. Please check your internet connection.';
+        } else if (error.responseJSON?.error) {
           if (typeof error.responseJSON.error === 'string') {
             errMsg = error.responseJSON.error;
           } else if (typeof error.responseJSON.error === 'object') {
@@ -917,15 +1024,18 @@
       // Show loading state on avatar
       const $avatarUploadBtn = $('.avatar-upload');
       const $avatarImage = $('#avatarImage');
+      const $avatarFallback = $('#avatarFallback');
       const originalBtnContent = $avatarUploadBtn.html();
       
       $avatarUploadBtn.html('⏳').css('pointer-events', 'none');
       $avatarImage.css('opacity', '0.5');
+      $avatarFallback.css('opacity', '0.5');
       
       // Preview the image immediately
       const reader = new FileReader();
       reader.onload = function(event) {
-        $avatarImage.attr('src', event.target.result);
+        $avatarImage.attr('src', event.target.result).show();
+        $avatarFallback.hide();
       };
       reader.readAsDataURL(file);
       
@@ -941,8 +1051,10 @@
           data: formData,
           processData: false,
           contentType: false,
+          timeout: 30000, // 30 seconds for file upload
           headers: {
-            'Authorization': `Bearer ${authToken}`
+            'Authorization': `Bearer ${authToken}`,
+            'Accept': 'application/json'
           }
         });
         
@@ -961,13 +1073,13 @@
         }
         
       } catch (error) {
-        console.error('Error updating avatar:', error);
+        console.warn('Error updating avatar:', error);
         
         // Revert to original avatar on error
         if (userData && (userData.avatar_url || userData.avatar_path)) {
           setAvatarImage(userData.avatar_url, userData.avatar_path);
         } else {
-          $avatarImage.attr('src', 'https://prolens.ccs4thyear.com/uploads/profile.png');
+          showAvatarFallback();
         }
         
         if (error.status === 401) {
@@ -977,15 +1089,15 @@
           return;
         }
         
-        let errorMessage = 'Failed to update profile picture';
-        if (error.responseJSON) {
-          if (error.responseJSON.error) {
-            errorMessage = error.responseJSON.error;
-          } else if (error.responseJSON.message) {
-            errorMessage = error.responseJSON.message;
-          }
-        } else if (error.statusText && error.statusText !== 'error') {
-          errorMessage = error.statusText;
+        let errorMessage = 'Failed to update profile picture. Please try again.';
+        if (error.status === 0) {
+          errorMessage = 'Could not connect to server. Please check your internet connection.';
+        } else if (error.responseJSON?.error) {
+          errorMessage = typeof error.responseJSON.error === 'string' 
+            ? error.responseJSON.error 
+            : 'Upload failed. Please try a different image.';
+        } else if (error.responseJSON?.message) {
+          errorMessage = error.responseJSON.message;
         }
         
         showMessage(errorMessage, 'error');
@@ -993,6 +1105,7 @@
         // Restore avatar upload button
         $avatarUploadBtn.html(originalBtnContent).css('pointer-events', 'auto');
         $avatarImage.css('opacity', '1');
+        $avatarFallback.css('opacity', '1');
         $(this).val(''); // Clear the input for next upload
       }
     });
