@@ -619,13 +619,14 @@
     });
   </script>
 
-  <!-- Axios CDN (required for forgot.js) -->
+  <!-- Axios CDN (required for forgot.js) - must load before forgot.js -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="js/forgot.js" defer></script>
   <!-- jQuery CDN -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="js/auth.js"></script>
+  <!-- Load forgot.js after all dependencies are loaded -->
+  <script src="js/forgot.js"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     redirectIfLoggedIn(); // Redirect to dashboard if already logged in
