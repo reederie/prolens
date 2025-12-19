@@ -10,17 +10,31 @@
     const origin = window.location.origin;
     const protocol = window.location.protocol;
     const hostname = window.location.hostname;
+    const pathname = window.location.pathname;
     
-    // If we're on the production domain (prolens.ccs4thyear.com)
-    if (hostname.includes('prolens.ccs4thyear.com')) {
-      // The frontend login page should be at the same domain
-      // Try to determine if we're in /api path and adjust accordingly
-      const pathname = window.location.pathname;
-      if (pathname.includes('/api/')) {
-        // We're in API path, go to root for frontend
-        return '/login.html?activated=1';
+    // Frontend URL - GitHub Pages
+    const FRONTEND_URL = 'https://reederie.github.io/prolens';
+    
+    // If we're on the backend API domain (prolens.ccs4thyear.com)
+    // Redirect to GitHub Pages frontend
+    if (hostname.includes('prolens.ccs4thyear.com') || hostname.includes('ccs4thyear.com')) {
+      return FRONTEND_URL + '/login.html?activated=1';
+    }
+    
+    // If we're on GitHub Pages (reederie.github.io)
+    if (hostname.includes('reederie.github.io')) {
+      // GitHub Pages structure: https://reederie.github.io/prolens
+      // Extract the base path (everything before the filename)
+      const basePath = pathname.substring(0, pathname.lastIndexOf('/'));
+      // If we're in /api path or root, go to /prolens/login.html
+      if (pathname.includes('/api/') || pathname === '/' || pathname === '' || pathname === '/prolens' || pathname === '/prolens/') {
+        return '/prolens/login.html?activated=1';
       }
-      return '/login.html?activated=1';
+      // Otherwise use relative path from current location
+      if (basePath && basePath !== '/') {
+        return basePath + '/login.html?activated=1';
+      }
+      return '/prolens/login.html?activated=1';
     }
     
     // For localhost or other domains, use relative path
@@ -31,6 +45,45 @@
   
   const correctLoginUrl = getLoginUrl();
   
+  // Intercept navigation attempts
+  let isRedirecting = false;
+  
+  // Intercept window.location.href assignments (if possible)
+  try {
+    const originalLocation = window.location;
+    let locationProxy = new Proxy(originalLocation, {
+      set: function(target, property, value) {
+        if (property === 'href' && typeof value === 'string' && (
+          value.includes('127.0.0.1') || 
+          value.includes('localhost') || 
+          value.includes('/frontend/login') ||
+          (value.includes('login') && (value.includes(':5500') || value.includes(':8000')))
+        )) {
+          isRedirecting = true;
+          target.href = correctLoginUrl;
+          return true;
+        }
+        target[property] = value;
+        return true;
+      }
+    });
+    // Note: We can't fully override window.location, but we'll catch clicks and href changes
+  } catch (e) {
+    // Proxy not available or location can't be proxied, use click interception only
+    console.log('Using click interception method');
+  }
+  
+  // Intercept beforeunload to catch any last-minute redirects
+  window.addEventListener('beforeunload', function(e) {
+    const currentHref = window.location.href;
+    if (currentHref.includes('127.0.0.1') || currentHref.includes('localhost') || 
+        currentHref.includes('/frontend/login') ||
+        (currentHref.includes('login') && (currentHref.includes(':5500') || currentHref.includes(':8000')))) {
+      e.preventDefault();
+      window.location.href = correctLoginUrl;
+    }
+  });
+
   // Intercept all clicks on the page
   document.addEventListener('click', function(e) {
     let target = e.target;
@@ -48,22 +101,26 @@
         )) {
           e.preventDefault();
           e.stopPropagation();
+          e.stopImmediatePropagation();
+          isRedirecting = true;
           window.location.href = correctLoginUrl;
           return false;
         }
       }
       
       // Check if it's a button with login-related text
-      if (target.tagName === 'BUTTON' || target.classList.contains('btn')) {
+      if (target.tagName === 'BUTTON' || target.classList.contains('btn') || target.hasAttribute('role') && target.getAttribute('role') === 'button') {
         const text = (target.textContent || target.innerText || '').toLowerCase();
         if (text.includes('proceed to login') || text.includes('go to login') || 
-            (text.includes('login') && text.includes('proceed'))) {
+            (text.includes('login') && (text.includes('proceed') || text.includes('go')))) {
           // Check if there's an onclick that might have wrong URL
           const onclick = target.getAttribute('onclick');
           if (onclick && (onclick.includes('127.0.0.1') || onclick.includes('localhost') || 
-              onclick.includes('/frontend/login'))) {
+              onclick.includes('/frontend/login') || onclick.includes(':5500') || onclick.includes(':8000'))) {
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation();
+            isRedirecting = true;
             window.location.href = correctLoginUrl;
             return false;
           }
@@ -71,6 +128,8 @@
           if (!onclick || onclick.trim() === '') {
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation();
+            isRedirecting = true;
             window.location.href = correctLoginUrl;
             return false;
           }
@@ -85,32 +144,55 @@
   function fixLoginRedirects() {
     const loginUrl = correctLoginUrl;
     
-    // Fix all links
-    const links = document.querySelectorAll('a[href]');
+    // Fix all links - be very aggressive
+    const links = document.querySelectorAll('a[href], [href]');
     links.forEach(link => {
       const href = link.getAttribute('href');
       const text = (link.textContent || link.innerText || '').toLowerCase();
-      // Fix incorrect login URLs
+      
+      // Fix incorrect login URLs - catch all variations
       if (href && (
         href.includes('127.0.0.1') || 
         href.includes('localhost') || 
         href.includes('/frontend/login') ||
+        href.includes('/frontend/login.html') ||
         (href.includes('login') && (href.includes(':5500') || href.includes(':8000')))
       )) {
+        // Force update the href
+        link.setAttribute('href', loginUrl);
         link.href = loginUrl;
-        // Override onclick
+        
+        // Remove any existing onclick
+        link.removeAttribute('onclick');
+        
+        // Override onclick completely
         link.onclick = function(e) {
           e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          isRedirecting = true;
           window.location.href = loginUrl;
           return false;
         };
+        
+        // Also add event listener as backup
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          isRedirecting = true;
+          window.location.href = loginUrl;
+          return false;
+        }, true);
       }
       // Also fix login links that don't have the activated parameter
       else if (href && href.includes('login.html') && !href.includes('activated=') && 
-               (text.includes('proceed') || text.includes('login'))) {
+               (text.includes('proceed') || text.includes('login') || text.includes('go'))) {
         // Add activated parameter if not present
         const separator = href.includes('?') ? '&' : '?';
-        link.href = href + separator + 'activated=1';
+        const newHref = href + separator + 'activated=1';
+        link.setAttribute('href', newHref);
+        link.href = newHref;
       }
     });
     
