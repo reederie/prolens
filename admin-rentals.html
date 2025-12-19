@@ -66,7 +66,12 @@
               <th>Rental Date</th>
               <th>Return Date</th>
               <th>Employee</th>
-              <th>Status</th>
+              <th>
+                <span style="cursor: pointer;" onclick="sortByStatus()" title="Click to sort by status">
+                  Status 
+                  <span id="statusSortIcon">⇅</span>
+                </span>
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -135,14 +140,28 @@
       loadRentals();
     });
 
+    let statusSortOrder = 'asc'; // 'asc' = PENDING first, 'desc' = COMPLETED first
+    
+    function sortByStatus() {
+      statusSortOrder = statusSortOrder === 'asc' ? 'desc' : 'asc';
+      const icon = statusSortOrder === 'asc' ? '↑' : '↓';
+      $('#statusSortIcon').text(icon);
+      loadRentals();
+    }
+    
     async function loadRentals() {
       try {
-        const rentals = await loadAllRentals();
+        let rentals = await loadAllRentals();
         const $tbody = $('#rentalsTable tbody');
         
         if (rentals.length === 0) {
           $tbody.html('<tr><td colspan="7" style="text-align: center;">No rentals found.</td></tr>');
           return;
+        }
+
+        // Client-side sorting if needed (backend already sorts, but allow reverse)
+        if (statusSortOrder === 'desc') {
+          rentals = rentals.slice().reverse();
         }
 
         $tbody.empty();
