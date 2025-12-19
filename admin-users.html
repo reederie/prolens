@@ -68,12 +68,18 @@
               <th>Username</th>
               <th>Full Name</th>
               <th>Role</th>
+              <th>
+                <span style="cursor: pointer;" onclick="sortByStatus()" title="Click to sort by status">
+                  Status 
+                  <span id="statusSortIcon">⇅</span>
+                </span>
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td colspan="5" style="text-align: center;">Loading users...</td>
+              <td colspan="6" style="text-align: center;">Loading users...</td>
             </tr>
           </tbody>
         </table>
@@ -113,6 +119,15 @@
             <option value="employee">Employee</option>
             <option value="admin">Admin</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" name="is_active" id="userIsActive" style="width: auto;">
+            <span>Active Account</span>
+          </label>
+          <p style="font-size: 0.85rem; color: var(--muted); margin-top: 4px;">
+            Inactive users cannot log in to the system.
+          </p>
         </div>
         <div style="display: flex; gap: 12px; margin-top: 8px;">
           <button type="submit" class="btn btn-primary" style="flex: 1;">Save</button>
@@ -185,19 +200,30 @@
         const $tbody = $('#usersTable tbody');
         
         if (users.length === 0) {
-          $tbody.html('<tr><td colspan="5" style="text-align: center;">No users found.</td></tr>');
+          $tbody.html('<tr><td colspan="6" style="text-align: center;">No users found.</td></tr>');
           return;
         }
 
         $tbody.empty();
         $.each(users, function(index, user) {
+          const statusClass = user.is_active ? 'status-active' : 'status-inactive';
+          const statusText = user.status || (user.is_active ? 'Active' : 'Inactive');
           const $tr = $('<tr>').html(`
             <td>${user.id}</td>
             <td>${user.username}</td>
             <td>${user.full_name}</td>
             <td><span class="status-badge">${user.role}</span></td>
             <td>
+              <span class="status-badge ${statusClass}" data-status="${user.is_active}">${statusText}</span>
+            </td>
+            <td>
               <button class="btn btn-primary edit-user-btn" data-id="${user.id}">Edit</button>
+              <button class="btn ${user.is_active ? 'btn-warning' : 'btn-success'} toggle-status-btn" 
+                      data-id="${user.id}" 
+                      data-active="${user.is_active}"
+                      title="${user.is_active ? 'Deactivate' : 'Activate'}">
+                ${user.is_active ? 'Deactivate' : 'Activate'}
+              </button>
               <button class="btn btn-danger delete-user-btn" data-id="${user.id}">Delete</button>
             </td>
           `);
@@ -205,7 +231,51 @@
         });
       } catch (err) {
         console.error('Error loading users:', err);
-        $('#usersTable tbody').html('<tr><td colspan="5" style="text-align: center; color: red;">Error loading users. Please try again.</td></tr>');
+        $('#usersTable tbody').html('<tr><td colspan="6" style="text-align: center; color: red;">Error loading users. Please try again.</td></tr>');
+      }
+    }
+    
+    let statusSortOrder = 'desc'; // 'desc' = Active first, 'asc' = Inactive first
+    
+    function sortByStatus() {
+      statusSortOrder = statusSortOrder === 'desc' ? 'asc' : 'desc';
+      const icon = statusSortOrder === 'desc' ? '↓' : '↑';
+      $('#statusSortIcon').text(icon);
+      loadUsersList();
+    }
+    
+    async function toggleUserStatus(id, currentStatus) {
+      const newStatus = !currentStatus;
+      const action = newStatus ? 'activate' : 'deactivate';
+      
+      const result = await Swal.fire({
+        icon: 'question',
+        title: `${action.charAt(0).toUpperCase() + action.slice(1)} User?`,
+        text: `Are you sure you want to ${action} this user?`,
+        showCancelButton: true,
+        confirmButtonText: `Yes, ${action}`,
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: newStatus ? '#16a34a' : '#f59e0b'
+      });
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        await updateUser(id, { is_active: newStatus });
+        await Swal.fire({
+          icon: 'success',
+          title: 'Updated!',
+          text: `User ${action}d successfully!`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadUsersList();
+      } catch (err) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: err.response?.data?.message || err.message || `Error ${action}ing user`
+        });
       }
     }
 
@@ -215,6 +285,7 @@
       $('#userForm')[0].reset();
       $('#userEmail').prop('disabled', false);
       $('#userPassword').prop('required', true);
+      $('#userIsActive').prop('checked', true); // New users are active by default
       $('#userModal').css('display', 'flex');
     }
 
@@ -240,6 +311,7 @@
         $('#userEmail').val(user.email).prop('disabled', true);
         $('#userPassword').prop('required', false);
         $('select[name="role"]').val(user.role).prop('disabled', false);
+        $('#userIsActive').prop('checked', user.is_active !== false); // Default to true if not set
         $('#userModal').css('display', 'flex');
       } catch (err) {
         await Swal.fire({
@@ -292,6 +364,12 @@
       $('#usersTable').on('click', '.delete-user-btn', function() {
         handleDeleteUser($(this).data('id'));
       });
+      
+      $('#usersTable').on('click', '.toggle-status-btn', function() {
+        const id = $(this).data('id');
+        const currentStatus = $(this).data('active') === true || $(this).data('active') === 'true';
+        toggleUserStatus(id, currentStatus);
+      });
 
       // Hamburger menu
       $('#hamburger').on('click', function() {
@@ -314,6 +392,7 @@
         userData.email = formData.get('email');
         userData.role = formData.get('role');
         userData.password = formData.get('password');
+        userData.is_active = formData.get('is_active') === 'on';
       } else {
         // Updating existing user - only send fields that are provided and not empty
         const firstname = formData.get('firstname')?.trim();
@@ -321,6 +400,7 @@
         const username = formData.get('username')?.trim();
         const password = formData.get('password');
         const role = formData.get('role');
+        const isActive = formData.get('is_active') === 'on';
         
         // Only include fields that have values
         // Username and password are optional when editing - if not provided, they remain unchanged
@@ -333,6 +413,8 @@
         }
         // Role is always sent when editing (required field)
         if (role) userData.role = role;
+        // Status is always sent when editing
+        userData.is_active = isActive;
       }
       
       try {
