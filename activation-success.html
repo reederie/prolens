@@ -129,7 +129,7 @@
     </div>
     <h1>Account Activated</h1>
     <p>Account activated successfully. You can now log in.</p>
-    <a href="login.html?activated=1" class="btn" id="proceedBtn">Proceed to Login</a>
+    <a href="#" class="btn" id="proceedBtn">Proceed to Login</a>
     <p class="footer-text">You can safely close this tab after logging in.</p>
   </div>
 
@@ -137,7 +137,35 @@
     // Handle button click to redirect to login page with success message
     document.addEventListener('DOMContentLoaded', function() {
       const proceedBtn = document.getElementById('proceedBtn');
-      const loginUrl = 'login.html?activated=1';
+      
+      // Get the correct login URL based on current location
+      function getLoginUrl() {
+        const hostname = window.location.hostname;
+        const pathname = window.location.pathname;
+        const FRONTEND_URL = 'https://reederie.github.io/prolens';
+        
+        // If we're on the backend API domain, redirect to GitHub Pages frontend
+        if (hostname.includes('prolens.ccs4thyear.com') || hostname.includes('ccs4thyear.com')) {
+          return FRONTEND_URL + '/login.html?activated=1';
+        }
+        
+        // If we're on GitHub Pages (reederie.github.io)
+        if (hostname.includes('reederie.github.io')) {
+          const basePath = pathname.substring(0, pathname.lastIndexOf('/'));
+          if (pathname === '/' || pathname === '' || pathname === '/prolens' || pathname === '/prolens/') {
+            return '/prolens/login.html?activated=1';
+          }
+          if (basePath && basePath !== '/') {
+            return basePath + '/login.html?activated=1';
+          }
+          return '/prolens/login.html?activated=1';
+        }
+        
+        // For other domains, use relative path
+        return 'login.html?activated=1';
+      }
+      
+      const loginUrl = getLoginUrl();
       
       // Ensure button click redirects immediately
       proceedBtn.addEventListener('click', function(e) {
