@@ -138,31 +138,10 @@
     document.addEventListener('DOMContentLoaded', function() {
       const proceedBtn = document.getElementById('proceedBtn');
       
-      // Get the correct login URL based on current location
+      // Get the correct login URL - always redirect to GitHub Pages
       function getLoginUrl() {
-        const hostname = window.location.hostname;
-        const pathname = window.location.pathname;
-        const FRONTEND_URL = 'https://reederie.github.io/prolens';
-        
-        // If we're on the backend API domain, redirect to GitHub Pages frontend
-        if (hostname.includes('prolens.ccs4thyear.com') || hostname.includes('ccs4thyear.com')) {
-          return FRONTEND_URL + '/login.html?activated=1';
-        }
-        
-        // If we're on GitHub Pages (reederie.github.io)
-        if (hostname.includes('reederie.github.io')) {
-          const basePath = pathname.substring(0, pathname.lastIndexOf('/'));
-          if (pathname === '/' || pathname === '' || pathname === '/prolens' || pathname === '/prolens/') {
-            return '/prolens/login.html?activated=1';
-          }
-          if (basePath && basePath !== '/') {
-            return basePath + '/login.html?activated=1';
-          }
-          return '/prolens/login.html?activated=1';
-        }
-        
-        // For other domains, use relative path
-        return 'login.html?activated=1';
+        // Always redirect to GitHub Pages login URL
+        return 'https://reederie.github.io/prolens/login.html?activated=1';
       }
       
       const loginUrl = getLoginUrl();
