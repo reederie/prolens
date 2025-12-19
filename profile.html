@@ -788,12 +788,12 @@
         $('#avatarFallback').text(initials).css('font-size', '2rem');
       }
       
-      // Set avatar URL with cache-busting
-      setAvatarImage(data.avatar_url, data.avatar_path);
+      // Set avatar URL with cache-busting, including preview backup if available
+      setAvatarImage(data.avatar_url, data.avatar_path, data.avatar_preview);
     }
     
     // Helper function to set avatar with cache-busting
-    function setAvatarImage(avatarUrl, avatarPath) {
+    function setAvatarImage(avatarUrl, avatarPath, avatarPreview) {
       const $avatarImage = $('#avatarImage');
       const $avatarFallback = $('#avatarFallback');
       const cacheBuster = '?t=' + Date.now();
@@ -811,7 +811,7 @@
         }
       }
       
-      // If we have a valid URL, try to load the image
+      // If we have a valid URL, try to load it
       if (url) {
         // Add cache-buster to prevent browser caching
         if (!url.includes('?')) {
@@ -820,21 +820,31 @@
           url += '&cb=' + Date.now();
         }
         
-        // Create a test image to check if URL is valid
+        // Try to load the server image
         const testImg = new Image();
         testImg.onload = function() {
-          // Image loaded successfully, show it
+          // Server image loaded successfully
           $avatarImage.attr('src', url).show();
           $avatarFallback.hide();
         };
         testImg.onerror = function() {
-          // Image failed to load, show fallback
-          console.log('Avatar image failed to load:', url);
-          showAvatarFallback();
+          // Server image failed, try preview backup
+          if (avatarPreview && avatarPreview !== 'null' && avatarPreview !== 'undefined') {
+            console.log('Using preview backup for avatar');
+            $avatarImage.attr('src', avatarPreview).show();
+            $avatarFallback.hide();
+          } else {
+            // No preview backup, show fallback
+            showAvatarFallback();
+          }
         };
         testImg.src = url;
+      } else if (avatarPreview && avatarPreview !== 'null' && avatarPreview !== 'undefined') {
+        // No server URL but we have a preview, use it
+        $avatarImage.attr('src', avatarPreview).show();
+        $avatarFallback.hide();
       } else {
-        // No valid URL, show fallback
+        // No valid URL or preview, show fallback
         showAvatarFallback();
       }
     }
@@ -1036,10 +1046,12 @@
       $avatarImage.css('opacity', '0.5');
       $avatarFallback.css('opacity', '0.5');
       
-      // Preview the image immediately
+      // Preview the image immediately and store it
+      let previewDataUrl = null;
       const reader = new FileReader();
       reader.onload = function(event) {
-        $avatarImage.attr('src', event.target.result).show();
+        previewDataUrl = event.target.result;
+        $avatarImage.attr('src', previewDataUrl).show();
         $avatarFallback.hide();
       };
       reader.readAsDataURL(file);
@@ -1065,16 +1077,36 @@
         
         showMessage('Profile picture updated successfully!', 'success');
         
-        // Update avatar with the server response and cache-busting
+        // Update userData in localStorage with the new avatar path
         if (response.avatar_path) {
-          setAvatarImage(response.avatar_url, response.avatar_path);
-          
-          // Update userData in localStorage
           if (userData) {
             userData.avatar_path = response.avatar_path;
             userData.avatar_url = response.avatar_url;
+            // Store the preview as backup in case server image fails to load
+            userData.avatar_preview = previewDataUrl;
             localStorage.setItem('userData', JSON.stringify(userData));
           }
+          
+          // Try to load the server image, but keep preview as fallback
+          const serverUrl = response.avatar_url || `https://prolens.ccs4thyear.com/${response.avatar_path.replace(/^\/+/, '')}`;
+          const serverUrlWithCache = serverUrl + (serverUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+          
+          // Create a test image to see if server URL works
+          const testImg = new Image();
+          testImg.onload = function() {
+            // Server image loaded successfully, use it
+            $avatarImage.attr('src', serverUrlWithCache).show();
+            $avatarFallback.hide();
+          };
+          testImg.onerror = function() {
+            // Server image failed, keep using the preview
+            console.log('Server image failed to load, using preview');
+            if (previewDataUrl) {
+              $avatarImage.attr('src', previewDataUrl).show();
+              $avatarFallback.hide();
+            }
+          };
+          testImg.src = serverUrlWithCache;
         }
         
       } catch (error) {
@@ -1082,7 +1114,7 @@
         
         // Revert to original avatar on error
         if (userData && (userData.avatar_url || userData.avatar_path)) {
-          setAvatarImage(userData.avatar_url, userData.avatar_path);
+          setAvatarImage(userData.avatar_url, userData.avatar_path, userData.avatar_preview);
         } else {
           showAvatarFallback();
         }
