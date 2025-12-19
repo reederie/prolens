@@ -63,7 +63,12 @@
               <th>Employee</th>
               <th>Rental Date</th>
               <th>Return Date</th>
-              <th>Status</th>
+              <th>
+                <span style="cursor: pointer;" onclick="sortByStatus()" title="Click to sort by status">
+                  Status 
+                  <span id="statusSortIcon">⇅</span>
+                </span>
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -139,14 +144,28 @@
       loadMyRentalsList();
     });
 
+    let statusSortOrder = 'asc'; // 'asc' = PENDING first, 'desc' = COMPLETED first
+    
+    function sortByStatus() {
+      statusSortOrder = statusSortOrder === 'asc' ? 'desc' : 'asc';
+      const icon = statusSortOrder === 'asc' ? '↑' : '↓';
+      document.getElementById('statusSortIcon').textContent = icon;
+      loadMyRentalsList();
+    }
+    
     async function loadMyRentalsList() {
       try {
-        const rentals = await loadMyRentals();
+        let rentals = await loadMyRentals();
         const tbody = document.querySelector('#rentalsTable tbody');
         
         if (rentals.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">You have no rentals yet.</td></tr>';
           return;
+        }
+
+        // Client-side sorting if needed (backend already sorts, but allow reverse)
+        if (statusSortOrder === 'desc') {
+          rentals = rentals.slice().reverse();
         }
 
         tbody.innerHTML = '';
@@ -208,6 +227,7 @@
     }
 
     window.handleCancelRental = handleCancelRental;
+    window.sortByStatus = sortByStatus;
 
     // loadMyRentalsList() is now called in checkRole() callback
 
