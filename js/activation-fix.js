@@ -18,14 +18,15 @@
       const pathname = window.location.pathname;
       if (pathname.includes('/api/')) {
         // We're in API path, go to root for frontend
-        return '/login.html';
+        return '/login.html?activated=1';
       }
-      return '/login.html';
+      return '/login.html?activated=1';
     }
     
     // For localhost or other domains, use relative path
     // This will work for same-origin requests
-    return 'login.html';
+    // Add activated parameter to show success message
+    return 'login.html?activated=1';
   }
   
   const correctLoginUrl = getLoginUrl();
@@ -88,6 +89,8 @@
     const links = document.querySelectorAll('a[href]');
     links.forEach(link => {
       const href = link.getAttribute('href');
+      const text = (link.textContent || link.innerText || '').toLowerCase();
+      // Fix incorrect login URLs
       if (href && (
         href.includes('127.0.0.1') || 
         href.includes('localhost') || 
@@ -101,6 +104,13 @@
           window.location.href = loginUrl;
           return false;
         };
+      }
+      // Also fix login links that don't have the activated parameter
+      else if (href && href.includes('login.html') && !href.includes('activated=') && 
+               (text.includes('proceed') || text.includes('login'))) {
+        // Add activated parameter if not present
+        const separator = href.includes('?') ? '&' : '?';
+        link.href = href + separator + 'activated=1';
       }
     });
     
