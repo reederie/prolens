@@ -619,14 +619,38 @@
     });
   </script>
 
-  <!-- Axios CDN (required for forgot.js) - must load before forgot.js -->
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- Axios CDN (required for forgot.js) - using unpkg as alternative -->
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <!-- jQuery CDN -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="js/auth.js"></script>
   <!-- Load forgot.js after all dependencies are loaded -->
-  <script src="js/forgot.js"></script>
+  <script>
+    // Ensure axios is loaded before initializing forgot.js
+    (function() {
+      function initForgotJS() {
+        if (typeof axios === 'undefined') {
+          console.error('Axios is not loaded. Retrying...');
+          setTimeout(initForgotJS, 100);
+          return;
+        }
+        // Load forgot.js dynamically to ensure axios is ready
+        const script = document.createElement('script');
+        script.src = 'js/forgot.js';
+        script.onerror = function() {
+          console.error('Failed to load forgot.js');
+        };
+        document.body.appendChild(script);
+      }
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initForgotJS);
+      } else {
+        initForgotJS();
+      }
+    })();
+  </script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     redirectIfLoggedIn(); // Redirect to dashboard if already logged in
