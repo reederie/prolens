@@ -643,6 +643,29 @@
         $('#nav-menu').removeClass('active');
       });
 
+      // Check for activation success message
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('activated') === '1') {
+        // Show success message
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Account Activated!',
+            text: 'Your account has been successfully activated. You can now log in.',
+            confirmButtonText: 'OK',
+            timer: 5000,
+            timerProgressBar: true
+          });
+        } else {
+          // Fallback if SweetAlert is not available
+          alert('Account Activated! Your account has been successfully activated. You can now log in.');
+        }
+        
+        // Clean up URL by removing the parameter
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+
       // Redirect if already logged in
       redirectIfLoggedIn();
     });
