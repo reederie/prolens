@@ -129,26 +129,26 @@
     </div>
     <h1>Account Activated</h1>
     <p>Account activated successfully. You can now log in.</p>
-    <a href="login.html" class="btn" id="proceedBtn">Proceed to Login</a>
+    <a href="login.html?activated=1" class="btn" id="proceedBtn">Proceed to Login</a>
     <p class="footer-text">You can safely close this tab after logging in.</p>
   </div>
 
   <script>
-    // Automatically redirect to login page with success message
-    // This page can be used as a redirect target from the backend
-    window.addEventListener('DOMContentLoaded', function() {
-      // Redirect to login page with activation success parameter
+    // Handle button click to redirect to login page with success message
+    document.addEventListener('DOMContentLoaded', function() {
+      const proceedBtn = document.getElementById('proceedBtn');
       const loginUrl = 'login.html?activated=1';
-      // Small delay to show the success message briefly
-      setTimeout(function() {
+      
+      // Ensure button click redirects immediately
+      proceedBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         window.location.href = loginUrl;
-      }, 1500);
-    });
-
-    // Also handle button click as backup
-    document.getElementById('proceedBtn').addEventListener('click', function(e) {
-      e.preventDefault();
-      window.location.href = 'login.html?activated=1';
+        return false;
+      });
+      
+      // Also make sure the href attribute is set correctly
+      proceedBtn.href = loginUrl;
     });
   </script>
 </body>
