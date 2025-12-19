@@ -63,7 +63,12 @@
               <th>Camera</th>
               <th>Rental Date</th>
               <th>Return Date</th>
-              <th>Status</th>
+              <th>
+                <span style="cursor: pointer;" onclick="sortByStatus()" title="Click to sort by status">
+                  Status 
+                  <span id="statusSortIcon">⇅</span>
+                </span>
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -139,14 +144,28 @@
       loadRentals();
     });
 
+    let statusSortOrder = 'asc'; // 'asc' = PENDING first, 'desc' = COMPLETED first
+    
+    function sortByStatus() {
+      statusSortOrder = statusSortOrder === 'asc' ? 'desc' : 'asc';
+      const icon = statusSortOrder === 'asc' ? '↑' : '↓';
+      document.getElementById('statusSortIcon').textContent = icon;
+      loadRentals();
+    }
+    
     async function loadRentals() {
       try {
-        const rentals = await loadEmployeeRentals();
+        let rentals = await loadEmployeeRentals();
         const tbody = document.querySelector('#rentalsTable tbody');
         
         if (rentals.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No rentals available.</td></tr>';
           return;
+        }
+
+        // Client-side sorting if needed (backend already sorts, but allow reverse)
+        if (statusSortOrder === 'desc') {
+          rentals = rentals.slice().reverse();
         }
 
         tbody.innerHTML = '';
@@ -344,6 +363,7 @@
     window.handleCameraAction = handleCameraAction;
     window.handleReturn = handleReturn;
     window.handleComplete = handleComplete;
+    window.sortByStatus = sortByStatus;
 
     // loadRentals() is now called in checkRole() callback
 
