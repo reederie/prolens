@@ -37,13 +37,17 @@
       return '/prolens/login.html?activated=1';
     }
     
-    // For localhost or other domains, use relative path
-    // This will work for same-origin requests
-    // Add activated parameter to show success message
-    return 'login.html?activated=1';
+    // For localhost or other domains, always redirect to GitHub Pages
+    // This ensures consistent behavior regardless of where the page is served from
+    return FRONTEND_URL + '/login.html?activated=1';
   }
   
   const correctLoginUrl = getLoginUrl();
+  
+  // Log for debugging
+  console.log('Activation Fix Script Loaded');
+  console.log('Current URL:', window.location.href);
+  console.log('Correct Login URL:', correctLoginUrl);
   
   // Intercept navigation attempts
   let isRedirecting = false;
