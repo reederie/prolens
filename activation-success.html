@@ -134,16 +134,23 @@
   </div>
 
   <script>
-    // Ensure the button always goes to the correct login page
+    // Automatically redirect to login page with success message
+    // This page can be used as a redirect target from the backend
+    window.addEventListener('DOMContentLoaded', function() {
+      // Redirect to login page with activation success parameter
+      const loginUrl = 'login.html?activated=1';
+      // Small delay to show the success message briefly
+      setTimeout(function() {
+        window.location.href = loginUrl;
+      }, 1500);
+    });
+
+    // Also handle button click as backup
     document.getElementById('proceedBtn').addEventListener('click', function(e) {
       e.preventDefault();
-      // Use relative path to ensure it works regardless of domain
-      const loginPath = 'login.html';
-      // If we're on a different domain/path, construct the correct path
-      const currentPath = window.location.pathname;
-      const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-      window.location.href = loginPath;
+      window.location.href = 'login.html?activated=1';
     });
   </script>
 </body>
 </html>
+
