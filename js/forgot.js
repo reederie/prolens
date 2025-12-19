@@ -1,5 +1,21 @@
 const API_URL = 'https://prolens.ccs4thyear.com';
 
+// Wait for axios and DOM to be available before initializing
+(function initForgotPassword() {
+  // Check if axios is loaded
+  if (typeof axios === 'undefined') {
+    // Retry after a short delay if axios isn't loaded yet
+    setTimeout(initForgotPassword, 100);
+    return;
+  }
+  
+  // Check if DOM elements exist (they should be ready since script is at end of body)
+  if (!document.getElementById('sendOtpBtn')) {
+    // DOM not ready yet, wait a bit
+    setTimeout(initForgotPassword, 100);
+    return;
+  }
+
 // DOM elements
 const stepEmail = document.getElementById('step-email');
 const stepOtp = document.getElementById('step-otp');
@@ -366,3 +382,5 @@ confirmPasswordInput.addEventListener('keypress', (e) => {
         resetPasswordBtn.click();
     }
 });
+
+})(); // Close the initForgotPassword function
