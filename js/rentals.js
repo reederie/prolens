@@ -141,23 +141,31 @@ async function handleCamera(id) {
 }
 
 // Return camera (Employee) - Mark active as returned
-// actualReturnDate: optional date string (YYYY-MM-DD) for testing purposes
-async function returnCamera(id, actualReturnDate = null) {
+async function returnCamera(id) {
   try {
-    const data = {};
-    if (actualReturnDate) {
-      data.actual_return_date = actualReturnDate;
-    }
-    
     const response = await authAxios({
       method: 'POST',
-      url: `${RENTALS_API_BASE}/rentals/${id}/return`,
-      data: data
+      url: `${RENTALS_API_BASE}/rentals/${id}/return`
     });
     
     return response.data;
   } catch (err) {
     console.error('Error returning camera:', err);
+    throw err;
+  }
+}
+
+// Return camera with penalty (Employee) - Mark active as returned and set renter status to penalty
+async function returnCameraWithPenalty(id) {
+  try {
+    const response = await authAxios({
+      method: 'POST',
+      url: `${RENTALS_API_BASE}/rentals/${id}/return-penalty`
+    });
+    
+    return response.data;
+  } catch (err) {
+    console.error('Error returning camera with penalty:', err);
     throw err;
   }
 }
