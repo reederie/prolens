@@ -302,6 +302,31 @@
     }
 
     async function handleReturn(id) {
+      // For testing: Calculate test return date if due date is 1/6/2026
+      let testReturnDate = null;
+      try {
+        // Fetch rental data to get return_date
+        const rentals = await loadEmployeeRentals();
+        const rental = rentals.find(r => r.id === id);
+        
+        if (rental && rental.return_date) {
+          const returnDate = new Date(rental.return_date);
+          // Check if return_date is 1/6/2026 (January 6, 2026)
+          if (returnDate.getFullYear() === 2026 && 
+              returnDate.getMonth() === 0 && // January is month 0
+              returnDate.getDate() === 6) {
+            // Set return date 2 days after (1/8/2026)
+            const testDate = new Date(returnDate);
+            testDate.setDate(testDate.getDate() + 2);
+            // Format as YYYY-MM-DD
+            testReturnDate = testDate.toISOString().split('T')[0];
+            console.log('For testing: Setting return date to', testReturnDate, 'instead of today');
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching rental data for testing:', err);
+      }
+      
       const result = await Swal.fire({
         icon: 'question',
         title: 'Return Camera?',
@@ -315,7 +340,7 @@
       if (!result.isConfirmed) return;
       
       try {
-        await returnCamera(id);
+        await returnCamera(id, testReturnDate);
         await Swal.fire({
           icon: 'success',
           title: 'Returned!',
