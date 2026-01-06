@@ -197,6 +197,10 @@
           else if (rental.status === 'returned' && isAssigned) {
             actionButtons = `<button class="btn btn-info" onclick="handleComplete(${rental.id})">Complete</button>`;
           }
+          // Penalty rentals: Show Complete button (only if assigned to this employee)
+          else if (rental.status === 'penalty' && isAssigned) {
+            actionButtons = `<button class="btn btn-info" onclick="handleComplete(${rental.id})">Complete</button>`;
+          }
           // Completed rentals: No action buttons (transaction is fully completed)
           else if (rental.status === 'completed' && isAssigned) {
             actionButtons = '<span style="color: var(--text-secondary);">Transaction Completed</span>';
