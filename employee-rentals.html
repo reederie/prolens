@@ -186,9 +186,12 @@
           else if (rental.status === 'approved' && isAssigned) {
             actionButtons = `<button class="btn btn-primary" onclick="handleCameraAction(${rental.id})">Give Camera to Renter</button>`;
           }
-          // Active rentals: Show Return button (only if assigned to this employee)
+          // Active rentals: Show Return and Penalty buttons (only if assigned to this employee)
           else if (rental.status === 'active' && isAssigned) {
-            actionButtons = `<button class="btn btn-warning" onclick="handleReturn(${rental.id})">Return</button>`;
+            actionButtons = `
+              <button class="btn btn-warning" onclick="handleReturn(${rental.id})" style="margin-right: 0.5rem;">Return</button>
+              <button class="btn btn-danger" onclick="handlePenalty(${rental.id})">Penalty</button>
+            `;
           }
           // Returned rentals: Show Complete button (only if assigned to this employee)
           else if (rental.status === 'returned' && isAssigned) {
@@ -302,31 +305,6 @@
     }
 
     async function handleReturn(id) {
-      // For testing: Calculate test return date if due date is 1/6/2026
-      let testReturnDate = null;
-      try {
-        // Fetch rental data to get return_date
-        const rentals = await loadEmployeeRentals();
-        const rental = rentals.find(r => r.id === id);
-        
-        if (rental && rental.return_date) {
-          const returnDate = new Date(rental.return_date);
-          // Check if return_date is 1/6/2026 (January 6, 2026)
-          if (returnDate.getFullYear() === 2026 && 
-              returnDate.getMonth() === 0 && // January is month 0
-              returnDate.getDate() === 6) {
-            // Set return date 2 days after (1/8/2026)
-            const testDate = new Date(returnDate);
-            testDate.setDate(testDate.getDate() + 2);
-            // Format as YYYY-MM-DD
-            testReturnDate = testDate.toISOString().split('T')[0];
-            console.log('For testing: Setting return date to', testReturnDate, 'instead of today');
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching rental data for testing:', err);
-      }
-      
       const result = await Swal.fire({
         icon: 'question',
         title: 'Return Camera?',
@@ -340,7 +318,7 @@
       if (!result.isConfirmed) return;
       
       try {
-        await returnCamera(id, testReturnDate);
+        await returnCamera(id);
         await Swal.fire({
           icon: 'success',
           title: 'Returned!',
@@ -351,6 +329,53 @@
         loadRentals();
       } catch (err) {
         showErrorAlert(err, 'returning camera');
+      }
+    }
+
+    async function handlePenalty(id) {
+      const result = await Swal.fire({
+        icon: 'question',
+        title: 'Return Camera with Penalty?',
+        text: 'Did the renter return the camera with a penalty?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, with penalty',
+        cancelButtonText: 'No, without penalty',
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#16a34a'
+      });
+      
+      if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+        // User clicked "No, without penalty" - process as regular return without showing another dialog
+        try {
+          await returnCamera(id);
+          await Swal.fire({
+            icon: 'success',
+            title: 'Returned!',
+            text: 'Camera returned successfully!',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          loadRentals();
+        } catch (err) {
+          showErrorAlert(err, 'returning camera');
+        }
+        return;
+      }
+      
+      if (!result.isConfirmed) return;
+      
+      try {
+        await returnCameraWithPenalty(id);
+        await Swal.fire({
+          icon: 'success',
+          title: 'Returned with Penalty!',
+          text: 'Camera returned successfully. Renter has been marked with penalty status.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        loadRentals();
+      } catch (err) {
+        showErrorAlert(err, 'returning camera with penalty');
       }
     }
 
@@ -387,6 +412,7 @@
     window.handleDecline = handleDecline;
     window.handleCameraAction = handleCameraAction;
     window.handleReturn = handleReturn;
+    window.handlePenalty = handlePenalty;
     window.handleComplete = handleComplete;
     window.sortByStatus = sortByStatus;
 
