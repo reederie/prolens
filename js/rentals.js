@@ -141,11 +141,18 @@ async function handleCamera(id) {
 }
 
 // Return camera (Employee) - Mark active as returned
-async function returnCamera(id) {
+// actualReturnDate: optional date string (YYYY-MM-DD) for testing purposes
+async function returnCamera(id, actualReturnDate = null) {
   try {
+    const data = {};
+    if (actualReturnDate) {
+      data.actual_return_date = actualReturnDate;
+    }
+    
     const response = await authAxios({
       method: 'POST',
-      url: `${RENTALS_API_BASE}/rentals/${id}/return`
+      url: `${RENTALS_API_BASE}/rentals/${id}/return`,
+      data: data
     });
     
     return response.data;
